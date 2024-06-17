@@ -151,14 +151,14 @@ runs:
         cd "${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}"
 
         if [ "${{ inputs.abort-on-panic }}" == "true" ]; then
-          $BUILD_CMD +nightly rustc --release -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ inputs.target }} $BUILD_FEATURES_ARGS
+          $BUILD_CMD +nightly rustc --release -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ inputs.target }} -Z unstable-options --target-dir "${GITHUB_WORKSPACE}/artifacts" $BUILD_FEATURES_ARGS
         else
-          $BUILD_CMD +nightly rustc --release -Z build-std=std --target ${{ inputs.target }} $BUILD_FEATURES_ARGS
+          $BUILD_CMD +nightly rustc --release -Z build-std=std --target ${{ inputs.target }} -Z unstable-options --target-dir "${GITHUB_WORKSPACE}/artifacts" $BUILD_FEATURES_ARGS
         fi
 
         echo "PWD: $(pwd)"
-        echo "Build Dir: ${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release"
-        ls "${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release"
+        echo "Build Dir: ${GITHUB_WORKSPACE}/artifacts"
+        ls "${GITHUB_WORKSPACE}/artifacts"
 
     - name: Build Rust project (without PGO)
       if: inputs.use-pgo != 'true'
@@ -186,20 +186,18 @@ runs:
         fi
 
         if [ "${{ inputs.abort-on-panic }}" == "true" ]; then
-          $BUILD_CMD +nightly rustc --release -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ inputs.target }} $FEATURES_ARGS
+          $BUILD_CMD +nightly rustc --release -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ inputs.target }} -Z unstable-options --target-dir "${GITHUB_WORKSPACE}/artifacts" $FEATURES_ARGS
         else
-          $BUILD_CMD +nightly rustc --release -Z build-std=std --target ${{ inputs.target }} $FEATURES_ARGS
+          $BUILD_CMD +nightly rustc --release -Z build-std=std --target ${{ inputs.target }} -Z unstable-options --target-dir "${GITHUB_WORKSPACE}/artifacts" $FEATURES_ARGS
         fi
 
         echo "PWD: $(pwd)"
-        echo "Build Dir: ${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release"
-        ls "${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release"
+        echo "Build Dir: ${GITHUB_WORKSPACE}/artifacts"
+        ls "${GITHUB_WORKSPACE}/artifacts"
 
     - name: Upload artifacts
       if: inputs.upload-artifacts == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}
-        path: |
-          ${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release/${{ inputs.crate-name }}*
-          !${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release/${{ inputs.crate-name }}*.d
+        path: ${GITHUB_WORKSPACE}/artifacts
