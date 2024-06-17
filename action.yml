@@ -151,9 +151,9 @@ runs:
         cd "${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}"
 
         if [ "${{ inputs.abort-on-panic }}" == "true" ]; then
-          $BUILD_CMD +nightly rustc --release -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ inputs.target }} -Z unstable-options --target-dir "${GITHUB_WORKSPACE}/artifacts" $BUILD_FEATURES_ARGS
+          $BUILD_CMD +nightly rustc --release -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ inputs.target }} -Z unstable-options --out-dir "${GITHUB_WORKSPACE}/artifacts" $BUILD_FEATURES_ARGS
         else
-          $BUILD_CMD +nightly rustc --release -Z build-std=std --target ${{ inputs.target }} -Z unstable-options --target-dir "${GITHUB_WORKSPACE}/artifacts" $BUILD_FEATURES_ARGS
+          $BUILD_CMD +nightly rustc --release -Z build-std=std --target ${{ inputs.target }} -Z unstable-options --out-dir "${GITHUB_WORKSPACE}/artifacts" $BUILD_FEATURES_ARGS
         fi
 
         echo "PWD: $(pwd)"
@@ -186,9 +186,9 @@ runs:
         fi
 
         if [ "${{ inputs.abort-on-panic }}" == "true" ]; then
-          $BUILD_CMD +nightly rustc --release -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ inputs.target }} -Z unstable-options --target-dir "${GITHUB_WORKSPACE}/artifacts" $FEATURES_ARGS
+          $BUILD_CMD +nightly rustc --release -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target ${{ inputs.target }} -Z unstable-options --out-dir "${GITHUB_WORKSPACE}/artifacts" $FEATURES_ARGS
         else
-          $BUILD_CMD +nightly rustc --release -Z build-std=std --target ${{ inputs.target }} -Z unstable-options --target-dir "${GITHUB_WORKSPACE}/artifacts" $FEATURES_ARGS
+          $BUILD_CMD +nightly rustc --release -Z build-std=std --target ${{ inputs.target }} -Z unstable-options --out-dir "${GITHUB_WORKSPACE}/artifacts" $FEATURES_ARGS
         fi
 
         echo "PWD: $(pwd)"
