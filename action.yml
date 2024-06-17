@@ -1,5 +1,5 @@
-name: 'Build Rust Artifact'
-description: 'Builds a Rust binary or library using cargo, with optional PGO and cross-compilation support.'
+name: 'Build Optimized Rust Binary'
+description: 'Builds a min sized Rust binary or library. With self-built std, abort on panic, PGO and cross-compilation support.'
 branding:
   icon: 'check'
   color: 'red'
