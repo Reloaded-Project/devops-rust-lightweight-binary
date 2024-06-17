@@ -1,0 +1,195 @@
+name: 'Build Rust Artifact'
+description: 'Builds a Rust binary or library using cargo, with optional PGO and cross-compilation support.'
+branding:
+  icon: 'check'
+  color: 'red'
+
+inputs:
+  rust-project-path:
+    description: 'Path to the Rust project'
+    required: false
+    default: '.'
+  pgo-project-path:
+    description: 'Path to the Rust project used for gathering PGO data. Can be same or separate project.'
+    required: false
+    default: '.'
+  crate-name:
+    description: 'Name of the Rust crate (used to determine file name)'
+    required: true
+  target:
+    description: 'The target platform for the Rust compiler'
+    required: true
+  features:
+    description: 'Comma-separated list of features to include in the build'
+    required: false
+    default: ''
+  no-default-features:
+    description: 'Do not include default features in the build'
+    required: false
+    default: false
+  use-pgo:
+    description: 'Use Profile-Guided Optimization [PGO] to build the artifact.'
+    required: false
+    default: false
+  pgo-benchmark-name:
+    description: 'Benchmark name to use with PGO.'
+    required: false
+    default: 'my_benchmark'
+  use-cross:
+    description: 'Use cross-rs for building. If false, use cargo.'
+    required: false
+    default: false
+  additional-rustflags:
+    description: 'Additional RUSTFLAGS to pass to the Rust compiler'
+    required: false
+    default: ''
+  upload-artifacts:
+    description: 'Upload the built artifacts as a GitHub Actions artifact'
+    required: false
+    default: true
+  abort-on-panic:
+    description: 'Abort immediately on panic. If false, the default panic handler is used.'
+    required: false
+    default: true
+  build-library:
+    description: 'Build a library instead of a binary. Requires `crate-type = ["cdylib", "staticlib"]` in Cargo.toml.'
+    required: false
+    default: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Nightly Rust
+      uses: dtolnay/rust-toolchain@nightly
+
+    - name: Run sccache-cache
+      uses: mozilla-actions/sccache-action@v0.0.3
+    
+    - name: Set Rust caching env vars
+      shell: bash
+      run: |
+        echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
+        echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+
+    - name: Install gcc-multilib (if on Ubuntu based System, and Not Using Cross)
+      if: inputs.use-cross == 'false' && runner.os == 'Linux'
+      run: |
+        sudo apt-get update || true
+        sudo apt-get install -y gcc-multilib || true
+      shell: bash
+
+    - name: Setup Rust Toolchain
+      shell: bash
+      working-directory: ${{ inputs.rust-project-path }}
+      run: |
+        rustup target add ${{ inputs.target }}
+        rustup component add rust-src --toolchain nightly
+        rustup toolchain install nightly-${{ inputs.target }} --force-non-host
+
+        # Install cross-rs if needed
+        if [ "${{ inputs.use-cross }}" == "true" ]; then
+          cargo install cross --git https://github.com/cross-rs/cross
+        fi
+
+    - name: Build Rust Project
+      shell: bash
+      working-directory: ${{ inputs.use-pgo == 'true' && inputs.pgo-project-path || inputs.rust-project-path }}
+      run: |
+        # Setup build variables
+        BUILD_CMD="cargo"
+        if [ "${{ inputs.use-cross }}" == "true" ]; then
+          BUILD_CMD="cross"
+        fi
+
+        BUILD_FEATURES_ARGS="${{ inputs.features }}"
+        if [ -n "$BUILD_FEATURES_ARGS" ]; then
+          BUILD_FEATURES_ARGS="--features $BUILD_FEATURES_ARGS"
+        fi
+
+        if [ "${{ inputs.no-default-features }}" == "true" ]; then
+          BUILD_FEATURES_ARGS="$BUILD_FEATURES_ARGS --no-default-features"
+        fi
+
+        CRATE_TYPES=""
+        if [ "${{ inputs.build-library }}" == "true" ]; then
+          CRATE_TYPES="--crate-type cdylib --crate-type staticlib"
+        fi
+
+        RUSTFLAGS="${{ inputs.additional-rustflags }} -Zlocation-detail=none -C lto=fat"
+        if [ "${{ inputs.abort-on-panic }}" == "true" ]; then
+          RUSTFLAGS="$RUSTFLAGS -C panic=abort"
+          BUILD_STD_ARGS="-Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort"
+        else
+          BUILD_STD_ARGS="-Z build-std=std"
+        fi
+
+        # Handle PGO
+        if [ "${{ inputs.use-pgo }}" == "true" ]; then
+          rustup component add llvm-tools-preview
+
+          PGO_FEATURES_ARGS="${{ inputs.features }}"
+          if [ -n "$PGO_FEATURES_ARGS" ]; then
+            PGO_FEATURES_ARGS="$PGO_FEATURES_ARGS,pgo"
+          else
+            PGO_FEATURES_ARGS="pgo"
+          fi
+
+          # Generate PGO profiling data
+          RUSTFLAGS="$RUSTFLAGS -Cprofile-generate=${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}/target/pgo-profiles" cargo +nightly test --bench ${{ inputs.pgo-benchmark-name }} --release --target ${{ inputs.target }} --features $PGO_FEATURES_ARGS
+
+          # Merge the PGO profiles
+          # This is tricky, llvm-profdata isn't in $PATH, so we need to find it ourselves.
+          target_libdir=$(rustc --print target-libdir)
+          bin_dir=$(dirname "$target_libdir")/bin
+          llvm_profdata_path=$(find "$bin_dir" -name "llvm-profdata*" | head -n 1)
+
+          $llvm_profdata_path merge -o "${{ inputs.rust-project-path }}/target/pgo-profiles/merged.profdata" "${{ inputs.rust-project-path }}/target/pgo-profiles"
+
+          # Get sanitized path to pgo-profiles
+          if [[ "${{ inputs.rust-project-path }}" == "." ]]; then
+            sanitized_path="${GITHUB_WORKSPACE}"
+          else
+            sanitized_path="${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}"
+          fi
+
+          # Ensure the path does not end with a slash
+          sanitized_path="${sanitized_path%/}"
+
+          # Use the generated PGO profiling data to perform an optimized build
+          RUSTFLAGS="$RUSTFLAGS -C llvm-args=-pgo-warn-missing-function -C profile-use=${sanitized_path}/target/pgo-profiles/merged.profdata"
+        fi
+
+        # Build the project
+        cd "${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}"
+        echo "$BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES $BUILD_FEATURES_ARGS"
+        $BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES $BUILD_FEATURES_ARGS
+
+        echo "PWD: $(pwd)"
+        echo "Build Dir: ${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release"
+        ls "${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release"
+
+    - name: Run sccache stat for check
+      shell: bash
+      run: sccache --show-stats
+
+    - name: Upload binary artifacts
+      if: inputs.upload-artifacts == 'true' && inputs.build-library != 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}
+        path: |
+          ${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release/${{ inputs.crate-name }}*
+          !${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release/${{ inputs.crate-name }}*.d
+        
+    - name: Upload library artifacts
+      if: inputs.upload-artifacts == 'true' && inputs.build-library == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: C-Library-${{ inputs.target }}-${{ inputs.features }}
+        path: |
+          ${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release/*.a
+          ${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release/*.so
+          ${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release/*.lib
+          ${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release/*.dll
+          ${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release/*.pdb
+          ${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release/*.dylib
