@@ -167,6 +167,7 @@ runs:
 
         # Build the project
         cd "${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}"
+        echo "$BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES $BUILD_FEATURES_ARGS"
         $BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES $BUILD_FEATURES_ARGS
 
         echo "PWD: $(pwd)"
