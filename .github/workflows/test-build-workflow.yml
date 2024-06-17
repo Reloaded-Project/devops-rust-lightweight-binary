@@ -67,7 +67,7 @@ jobs:
           repository: Sewer56/prs-rs
           ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
       - name: Test Binary Build
-        uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
           target: ${{ matrix.target }}
           use-pgo: ${{ matrix.use-pgo }}
@@ -124,7 +124,7 @@ jobs:
           repository: Sewer56/prs-rs
           ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
       - name: Test Library Build
-        uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
           crate-name: prs-rs
           target: ${{ matrix.target }}
@@ -144,7 +144,7 @@ jobs:
           repository: Sewer56/prs-rs
           ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
       - name: Test PGO with Cross-Compilation (Binary)
-        uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
           rust-project-path: tools/cli
           pgo-project-path: .
@@ -155,7 +155,7 @@ jobs:
           pgo-benchmark-name: my_benchmark
           upload-artifacts: false
       - name: Test PGO with Cross-Compilation (Library)
-        uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
           crate-name: prs-rs
           target: aarch64-unknown-linux-gnu # x64 host to to aarch64 simulated guest
@@ -174,7 +174,7 @@ jobs:
           repository: Sewer56/prs-rs
           ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
       - name: Test Library Feature Build
-        uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
           crate-name: prs-rs
           target: x86_64-unknown-linux-gnu
@@ -191,7 +191,7 @@ jobs:
           repository: Sewer56/prs-rs
           ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
       - name: Test Library No Default Features
-        uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
           crate-name: prs-rs
           target: x86_64-unknown-linux-gnu
@@ -209,7 +209,7 @@ jobs:
           repository: Sewer56/prs-rs
           ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
       - name: Test Binary PGO with Library
-        uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
           rust-project-path: tools/cli
           pgo-project-path: .
@@ -228,7 +228,7 @@ jobs:
           repository: Sewer56/prs-rs
           ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
       - name: Test Library PGO
-        uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
           crate-name: prs-rs
           target: x86_64-unknown-linux-gnu
@@ -246,7 +246,7 @@ jobs:
           repository: Sewer56/prs-rs
           ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
       - name: Test Custom RUSTFLAGS (Binary)
-        uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
           rust-project-path: tools/cli
           crate-name: prs-rs-cli
@@ -254,7 +254,7 @@ jobs:
           additional-rustflags: -C opt-level=3
           upload-artifacts: false
       - name: Test Custom RUSTFLAGS (Library)
-        uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
           crate-name: prs-rs
           target: x86_64-unknown-linux-gnu
@@ -272,7 +272,7 @@ jobs:
           ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
 
       - name: Test Artifact Upload (Binary)
-        uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
           rust-project-path: tools/cli
           crate-name: prs-rs-cli
@@ -292,7 +292,7 @@ jobs:
           fi
 
       - name: Test Artifact Upload (Library)
-        uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
           crate-name: prs-rs
           target: x86_64-unknown-linux-gnu
