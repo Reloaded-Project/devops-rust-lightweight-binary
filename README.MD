@@ -124,10 +124,17 @@ to keep the benchmark as close to the final usage of your application as possibl
 
 Then said profile is used to build the final version of your application.
 
-Setting `use-pgo` should work for any target technically speaking, as the profiling data is collected
-on the host machine. However, I personally am not sure if it's a valid use case to use PGO data
-when cross compiling code to a different CPU architecture. I haven't ran into issues trying, but
-just be careful.
+For PGO to work, the `target` platform must be the same as the host that generated the profiling
+data. Sometimes you can get away with using `cross` to achieve this, for example:
+
+```yaml
+# Host is x86-linux but this seems to work just a-ok!
+target: aarch64-unknown-linux-gnu # x64 host to to aarch64 simulated guest
+use-pgo: true
+use-cross: true
+```
+
+If the process fails, your CI will fail, so do experiment.
 
 ## Building Libraries
 

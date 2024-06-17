@@ -135,7 +135,8 @@ runs:
           fi
 
           # Generate PGO profiling data
-          RUSTFLAGS="$RUSTFLAGS -Cprofile-generate=${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}/target/pgo-profiles" cargo +nightly test --bench ${{ inputs.pgo-benchmark-name }} --release --target ${{ inputs.target }} --features $PGO_FEATURES_ARGS
+          RUSTFLAGS_BACKUP="$RUSTFLAGS"
+          RUSTFLAGS="$RUSTFLAGS -Cprofile-generate=${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}/target/pgo-profiles" $BUILD_CMD +nightly test --bench ${{ inputs.pgo-benchmark-name }} --release --target ${{ inputs.target }} --features $PGO_FEATURES_ARGS
 
           # Merge the PGO profiles
           # This is tricky, llvm-profdata isn't in $PATH, so we need to find it ourselves.
@@ -156,7 +157,7 @@ runs:
           sanitized_path="${sanitized_path%/}"
 
           # Use the generated PGO profiling data to perform an optimized build
-          RUSTFLAGS="$RUSTFLAGS -C llvm-args=-pgo-warn-missing-function -C profile-use=${sanitized_path}/target/pgo-profiles/merged.profdata"
+          RUSTFLAGS="$RUSTFLAGS_BACKUP -C llvm-args=-pgo-warn-missing-function -C profile-use=${sanitized_path}/target/pgo-profiles/merged.profdata"
         fi
 
         # Build the project

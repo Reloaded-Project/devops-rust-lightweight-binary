@@ -133,6 +133,37 @@ jobs:
           build-library: true
           upload-artifacts: false
 
+  # This tests gathering PGO data on a host, and building for a different target.
+  test-pgo-with-cross-compile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Test Repository
+        uses: actions/checkout@v4
+        with:
+          repository: Sewer56/prs-rs
+          ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
+      - name: Test PGO with Cross-Compilation (Binary)
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+        with:
+          rust-project-path: tools/cli/
+          pgo-project-path: .
+          crate-name: prs-rs-cli
+          target: aarch64-unknown-linux-gnu # x64 host to aarch64 simulated guest
+          use-pgo: true
+          use-cross: true
+          pgo-benchmark-name: my_benchmark
+          upload-artifacts: false
+      - name: Test PGO with Cross-Compilation (Library)
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+        with:
+          crate-name: prs-rs
+          target: aarch64-unknown-linux-gnu # x64 host to to aarch64 simulated guest
+          use-pgo: true
+          use-cross: true
+          pgo-benchmark-name: my_benchmark
+          upload-artifacts: false
+          build-library: true
+
   test-library-feature-build:
     runs-on: ubuntu-latest
     steps:
