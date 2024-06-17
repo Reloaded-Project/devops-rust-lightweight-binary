@@ -59,23 +59,14 @@ runs:
     - name: Install Nightly Rust
       uses: dtolnay/rust-toolchain@nightly
 
-    - name: Cache Cargo registry
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-registry-
-
-    - name: Cache Cargo target
-      uses: actions/cache@v4
-      with:
-        path: ${{ inputs.rust-project-path }}/target
-        key: ${{ runner.os }}-cargo-target-${{ inputs.target }}-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-target-${{ inputs.target }}-
+    - name: Run sccache-cache
+      uses: mozilla-actions/sccache-action@v0.0.3
+    
+    - name: Set Rust caching env vars
+      shell: bash
+      run: |
+        echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
+        echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
 
     - name: Install gcc-multilib (if on Ubuntu based System, and Not Using Cross)
       if: inputs.use-cross == 'false' && runner.os == 'Linux'
@@ -173,6 +164,10 @@ runs:
         echo "PWD: $(pwd)"
         echo "Build Dir: ${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release"
         ls "${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release"
+
+    - name: Run sccache stat for check
+      shell: bash
+      run: sccache --show-stats
 
     - name: Upload binary artifacts
       if: inputs.upload-artifacts == 'true' && inputs.build-library != 'true'
