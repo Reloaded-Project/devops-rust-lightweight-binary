@@ -96,9 +96,6 @@ To use this action in your own repository:
 2. Copy the example usage job from above into the new workflow file.
 3. Customize the input parameters as needed for your project.
 
-If you are building a C library, ensure your project's `Cargo.toml` file defines
-`crate-type = ["cdylib", "staticlib"]`.
-
 ## Configuration
 
 ### Inputs
@@ -110,12 +107,14 @@ If you are building a C library, ensure your project's `Cargo.toml` file defines
 | `crate-name`           | Yes      |                  | Name of the Rust crate (used to determine file name)                                   |
 | `target`               | Yes      |                  | The target platform for the Rust compiler                                              |
 | `features`             | No       | `''`             | Comma-separated list of features to include in the build                               |
+| `no-default-features`  | No       | `false`          | Do not include default features in the build                                           |
 | `use-pgo`              | No       | `false`          | Use Profile-Guided Optimization [PGO] to build the library.                            |
 | `pgo-benchmark-name`   | No       | `'my_benchmark'` | Benchmark name to use with PGO.                                                        |
 | `use-cross`            | No       | `false`          | Use cross-rs for building. If false, use cargo.                                        |
 | `additional-rustflags` | No       | `''`             | Additional RUSTFLAGS to pass to the Rust compiler                                      |
 | `upload-artifacts`     | No       | `true`           | Upload the built artifacts as a GitHub Actions artifact                                |
 | `abort-on-panic`       | No       | `true`           | Abort immediately on panic. If false, the default panic handler is used.               |
+| `build-library`        | No       | `false`          | Build a library instead of a binary. Requires `crate-type = ["cdylib", "staticlib"]` in Cargo.toml. |
 
 ### Setting up Profile-Guided Optimization (PGO)
 
@@ -129,6 +128,14 @@ Setting `use-pgo` should work for any target technically speaking, as the profil
 on the host machine. However, I personally am not sure if it's a valid use case to use PGO data
 when cross compiling code to a different CPU architecture. I haven't ran into issues trying, but
 just be careful.
+
+## Building Libraries
+
+To build a library instead of a binary, set the `build-library` input to `true`.
+This is equivalent to setting `crate-type = ["cdylib", "staticlib"]` in `Cargo.toml`.
+
+When building a library, the generated artifacts will include static libraries (`.a`, `.lib`) 
+and dynamic libraries (`.so`, `.dll`, `.dylib`) depending on the target platform.
 
 ## Examples
 
@@ -170,13 +177,17 @@ Find more examples in [the tests](./.github/workflows/test-rust-build-c-library-
 
 ## Accessing the Built Artifacts
 
-After a successful run, the built C library artifacts will be available as a downloadable
+After a successful run, the built artifacts will be available as a downloadable
 artifact in the GitHub Actions run.
+
+For binary builds, the artifact will be named `${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}`.
+
+For library builds, the artifact will be named `C-Library-${{ inputs.target }}-${{ inputs.features }}`.
 
 To access the artifacts:
 
 1. Navigate to the Actions tab in your repository.
-2. Click on the workflow run that built the C library.
+2. Click on the workflow run that built the artifacts.
 3. In the "Artifacts" section, you will find the generated artifacts, which you can download.
 
 ## Why this Exists?

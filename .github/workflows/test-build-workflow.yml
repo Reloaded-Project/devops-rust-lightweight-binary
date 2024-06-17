@@ -84,6 +84,7 @@ jobs:
           use-cross: ${{ matrix.use-cross }}
           abort-on-panic: false
           upload-artifacts: false
+          build-library: true
 
   test-library-feature-build:
     runs-on: ubuntu-latest
@@ -100,6 +101,43 @@ jobs:
           target: x86_64-unknown-linux-gnu
           features: c-exports,std
           upload-artifacts: false
+          build-library: true
+
+  test-library-no-default-features:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Test Repository
+        uses: actions/checkout@v4
+        with:
+          repository: Sewer56/prs-rs
+          ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
+      - name: Test Library No Default Features
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+        with:
+          crate-name: prs-rs
+          target: x86_64-unknown-linux-gnu
+          no-default-features: true
+          upload-artifacts: false
+          build-library: true
+
+  test-binary-pgo-with-library:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Test Repository
+        uses: actions/checkout@v4
+        with:
+          repository: Sewer56/prs-rs
+          ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
+      - name: Test Binary PGO with Library
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+        with:
+          rust-project-path: tools/cli/
+          pgo-project-path: .
+          crate-name: prs-rs-cli
+          target: x86_64-unknown-linux-gnu
+          use-pgo: true
+          pgo-benchmark-name: my_benchmark
+          upload-artifacts: false
 
   test-library-pgo:
     runs-on: ubuntu-latest
@@ -115,8 +153,9 @@ jobs:
           crate-name: prs-rs
           target: x86_64-unknown-linux-gnu
           use-pgo: true
-          pgo-benchmark-name: benchmark_name
+          pgo-benchmark-name: my_benchmark
           upload-artifacts: false
+          build-library: true
 
   test-custom-rustflags:
     runs-on: ubuntu-latest
@@ -141,6 +180,7 @@ jobs:
           target: x86_64-unknown-linux-gnu
           additional-rustflags: -C opt-level=3
           upload-artifacts: false
+          build-library: true
 
   test-artifact-upload:
     runs-on: ubuntu-latest
@@ -176,11 +216,12 @@ jobs:
         with:
           crate-name: prs-rs
           target: x86_64-unknown-linux-gnu
+          build-library: true
 
       - name: Download Library Artifact
         uses: actions/download-artifact@v4
         with:
-          name: prs-rs-x86_64-unknown-linux-gnu-
+          name: C-Library-x86_64-unknown-linux-gnu-
 
       - name: Assert Library Artifact
         shell: bash
