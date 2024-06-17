@@ -30,7 +30,7 @@ It can be used to build both binaries and C libraries.
 As a single job/step of a workflow:
 
 ```yaml
-build-cli-tool:
+test-binary-build:
   strategy:
     matrix:
       include:
@@ -58,7 +58,7 @@ build-cli-tool:
           target: i686-pc-windows-msvc
           use-pgo: true
           use-cross: false
-        - os: windows-latest 
+        - os: windows-latest
           target: aarch64-pc-windows-msvc
           use-pgo: false # no native runner
           use-cross: false
@@ -70,22 +70,22 @@ build-cli-tool:
           target: aarch64-apple-darwin
           use-pgo: true
           use-cross: false
-
   runs-on: ${{ matrix.os }}
-
   steps:
-    - uses: actions/checkout@v4
+    - name: Checkout Test Repository
+      uses: actions/checkout@v4
       with:
-        submodules: recursive
-
-    - id: build-libs
+        repository: Sewer56/prs-rs
+        ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
+    - name: Test Binary Build
       uses: Reloaded-Project/devops-rust-lightweight-binary@v1
       with:
         target: ${{ matrix.target }}
         use-pgo: ${{ matrix.use-pgo }}
         use-cross: ${{ matrix.use-cross }}
-        rust-project_path: "tools/cli/"
+        rust-project-path: "tools/cli/"
         crate-name: "prs-rs-cli"
+        upload-artifacts: false
 ```
 
 ## Setup
@@ -114,7 +114,7 @@ To use this action in your own repository:
 | `additional-rustflags` | No       | `''`             | Additional RUSTFLAGS to pass to the Rust compiler                                      |
 | `upload-artifacts`     | No       | `true`           | Upload the built artifacts as a GitHub Actions artifact                                |
 | `abort-on-panic`       | No       | `true`           | Abort immediately on panic. If false, the default panic handler is used.               |
-| `build-library`        | No       | `false`          | Build a library instead of a binary. Requires `crate-type = ["cdylib", "staticlib"]` in Cargo.toml. |
+| `build-library`        | No       | `false`          | Build a library instead of a binary.                                                   |
 
 ### Setting up Profile-Guided Optimization (PGO)
 

@@ -24,40 +24,40 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            use_pgo: true
-            use_cross: false
+            use-pgo: true
+            use-cross: false
           - os: ubuntu-latest
             target: i686-unknown-linux-gnu
-            use_pgo: true
-            use_cross: false
+            use-pgo: true
+            use-cross: false
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-            use_pgo: false # no native runner
-            use_cross: true
+            use-pgo: false # no native runner
+            use-cross: true
           - os: ubuntu-latest
             target: armv7-unknown-linux-gnueabihf
-            use_pgo: false # no native runner
-            use_cross: true
+            use-pgo: false # no native runner
+            use-cross: true
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            use_pgo: true
-            use_cross: false
+            use-pgo: true
+            use-cross: false
           - os: windows-latest
             target: i686-pc-windows-msvc
-            use_pgo: true
-            use_cross: false
+            use-pgo: true
+            use-cross: false
           - os: windows-latest
             target: aarch64-pc-windows-msvc
-            use_pgo: false # no native runner
-            use_cross: false
+            use-pgo: false # no native runner
+            use-cross: false
           - os: macos-13 # x86
             target: x86_64-apple-darwin
-            use_pgo: true
-            use_cross: false
+            use-pgo: true
+            use-cross: false
           - os: macos-14 # M1
             target: aarch64-apple-darwin
-            use_pgo: true
-            use_cross: false
+            use-pgo: true
+            use-cross: false
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Test Repository
@@ -69,8 +69,8 @@ jobs:
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1
         with:
           target: ${{ matrix.target }}
-          use-pgo: ${{ matrix.use_pgo }}
-          use-cross: ${{ matrix.use_cross }}
+          use-pgo: ${{ matrix.use-pgo }}
+          use-cross: ${{ matrix.use-cross }}
           rust-project-path: "tools/cli/"
           crate-name: "prs-rs-cli"
           upload-artifacts: false
@@ -81,40 +81,40 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            use_pgo: true
-            use_cross: false
+            use-pgo: true
+            use-cross: false
           - os: ubuntu-latest
             target: i686-unknown-linux-gnu
-            use_pgo: true
-            use_cross: false
+            use-pgo: true
+            use-cross: false
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-            use_pgo: false # no native runner
-            use_cross: true
+            use-pgo: false # no native runner
+            use-cross: true
           - os: ubuntu-latest
             target: armv7-unknown-linux-gnueabihf
-            use_pgo: false # no native runner
-            use_cross: true
+            use-pgo: false # no native runner
+            use-cross: true
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            use_pgo: true
-            use_cross: false
+            use-pgo: true
+            use-cross: false
           - os: windows-latest
             target: i686-pc-windows-msvc
-            use_pgo: true
-            use_cross: false
+            use-pgo: true
+            use-cross: false
           - os: windows-latest
             target: aarch64-pc-windows-msvc
-            use_pgo: false # no native runner
-            use_cross: false
+            use-pgo: false # no native runner
+            use-cross: false
           - os: macos-13 # x86
             target: x86_64-apple-darwin
-            use_pgo: true
-            use_cross: false
+            use-pgo: true
+            use-cross: false
           - os: macos-14 # M1
             target: aarch64-apple-darwin
-            use_pgo: true
-            use_cross: false
+            use-pgo: true
+            use-cross: false
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Test Repository
@@ -127,8 +127,8 @@ jobs:
         with:
           crate-name: prs-rs
           target: ${{ matrix.target }}
-          use-pgo: ${{ matrix.use_pgo }}
-          use-cross: ${{ matrix.use_cross }}
+          use-pgo: ${{ matrix.use-pgo }}
+          use-cross: ${{ matrix.use-cross }}
           features: "c-exports"
           build-library: true
           upload-artifacts: false

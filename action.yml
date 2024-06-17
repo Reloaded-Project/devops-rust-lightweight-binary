@@ -1,5 +1,8 @@
 name: 'Build Rust Artifact'
 description: 'Builds a Rust binary or library using cargo, with optional PGO and cross-compilation support.'
+branding:
+  icon: 'check'
+  color: 'red'
 
 inputs:
   rust-project-path:
