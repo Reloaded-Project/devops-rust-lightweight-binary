@@ -73,9 +73,9 @@ runs:
       uses: actions/cache@v4
       with:
         path: ${{ inputs.rust-project-path }}/target
-        key: ${{ runner.os }}-cargo-target-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-cargo-target-${{ inputs.target }}-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
-          ${{ runner.os }}-cargo-target-
+          ${{ runner.os }}-cargo-target-${{ inputs.target }}-
 
     - name: Install gcc-multilib (if on Ubuntu based System, and Not Using Cross)
       if: inputs.use-cross == 'false' && runner.os == 'Linux'
@@ -144,6 +144,7 @@ runs:
           RUSTFLAGS="$RUSTFLAGS -Cprofile-generate=${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}/target/pgo-profiles" cargo +nightly test --bench ${{ inputs.pgo-benchmark-name }} --release --target ${{ inputs.target }} --features $PGO_FEATURES_ARGS
 
           # Merge the PGO profiles
+          # This is tricky, llvm-profdata isn't in $PATH, so we need to find it ourselves.
           target_libdir=$(rustc --print target-libdir)
           bin_dir=$(dirname "$target_libdir")/bin
           llvm_profdata_path=$(find "$bin_dir" -name "llvm-profdata*" | head -n 1)
