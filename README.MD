@@ -122,6 +122,25 @@ Profile-Guided Optimization works by compiling and executing a benchmark whose n
 can be defined by `pgo-benchmark-name` and `pgo-project-path` respectively. So you should strive
 to keep the benchmark as close to the final usage of your application as possible.
 
+A benchmark for PGO can be defined as follows:
+
+```rust
+// Regular benchmarks, not PGO
+#[cfg(not(feature = "pgo"))]
+{
+    bench_estimate(c);
+    bench_decompress(c);
+    bench_compress_file(c);
+    bench_create_dict(c);
+}
+
+// Benchmark with realistic usage patterns for PGO.
+#[cfg(feature = "pgo")]
+{
+    generate_pgo_data();
+}
+```
+
 Then said profile is used to build the final version of your application.
 
 For PGO to work, the `target` platform must be the same as the host that generated the profiling
