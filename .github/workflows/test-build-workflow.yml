@@ -8,6 +8,7 @@ on:
     branches: [ master ]
     tags:
       - 'v1'
+      - 'v1-test'
     paths:
       - 'action.yml'
       - '.github/workflows/test-build-workflow.yml'
@@ -71,7 +72,7 @@ jobs:
           target: ${{ matrix.target }}
           use-pgo: ${{ matrix.use-pgo }}
           use-cross: ${{ matrix.use-cross }}
-          rust-project-path: "tools/cli/"
+          rust-project-path: "tools/cli"
           crate-name: "prs-rs-cli"
           upload-artifacts: false
   
@@ -145,7 +146,7 @@ jobs:
       - name: Test PGO with Cross-Compilation (Binary)
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1
         with:
-          rust-project-path: tools/cli/
+          rust-project-path: tools/cli
           pgo-project-path: .
           crate-name: prs-rs-cli
           target: aarch64-unknown-linux-gnu # x64 host to aarch64 simulated guest
@@ -210,7 +211,7 @@ jobs:
       - name: Test Binary PGO with Library
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1
         with:
-          rust-project-path: tools/cli/
+          rust-project-path: tools/cli
           pgo-project-path: .
           crate-name: prs-rs-cli
           target: x86_64-unknown-linux-gnu
@@ -247,7 +248,7 @@ jobs:
       - name: Test Custom RUSTFLAGS (Binary)
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1
         with:
-          rust-project-path: tools/cli/
+          rust-project-path: tools/cli
           crate-name: prs-rs-cli
           target: x86_64-unknown-linux-gnu
           additional-rustflags: -C opt-level=3
@@ -273,7 +274,7 @@ jobs:
       - name: Test Artifact Upload (Binary)
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1
         with:
-          rust-project-path: tools/cli/
+          rust-project-path: tools/cli
           crate-name: prs-rs-cli
           target: x86_64-unknown-linux-gnu
 

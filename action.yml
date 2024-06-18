@@ -59,24 +59,34 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Install Nightly Rust
-      uses: dtolnay/rust-toolchain@nightly
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        matcher: false
+        cache: false
+        toolchain: nightly
 
-    - name: Run sccache-cache
-      uses: mozilla-actions/sccache-action@v0.0.5
-    
-    - name: Set Rust caching env vars
-      shell: bash
-      run: |
-        echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-        echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+    - name: Setup Rust Caching
+      uses: Swatinem/rust-cache@v2
+      with:
+        key: ${{ inputs.target }}
+        cache-on-failure: true
 
-    - name: Install gcc-multilib (if on Ubuntu based System, and Not Using Cross)
+    - name: Install gcc-multilib (if on Ubuntu based System, and Target is not Host)
       if: inputs.use-cross == 'false' && runner.os == 'Linux'
-      run: |
-        sudo apt-get update || true
-        sudo apt-get install -y gcc-multilib || true
       shell: bash
+      run: |
+        # Get host triple
+        HOST_TARGET=$(rustc -vV | sed -n 's|host: ||p')
+        echo "Host target: $HOST_TARGET"
+        echo "Target: ${{ inputs.target }}"
+
+        if [ "$HOST_TARGET" != "${{ inputs.target }}" ]; then
+          echo "Target is different from host. Installing gcc-multilib..."
+          sudo apt-get update || true
+          sudo apt-get install -y gcc-multilib || true
+        else
+          echo "Target is the same as host. Skipping gcc-multilib installation."
+        fi
 
     - name: Setup Rust Toolchain
       shell: bash
@@ -93,85 +103,92 @@ runs:
 
     - name: Build Rust Project
       shell: bash
-      working-directory: ${{ inputs.use-pgo == 'true' && inputs.pgo-project-path || inputs.rust-project-path }}
       run: |
         # Setup build variables
         BUILD_CMD="cargo"
         if [ "${{ inputs.use-cross }}" == "true" ]; then
           BUILD_CMD="cross"
         fi
-
+    
         BUILD_FEATURES_ARGS="${{ inputs.features }}"
-        if [ -n "$BUILD_FEATURES_ARGS" ]; then
-          BUILD_FEATURES_ARGS="--features $BUILD_FEATURES_ARGS"
-        fi
-
+        NO_DEFAULT_FEATURES=""
         if [ "${{ inputs.no-default-features }}" == "true" ]; then
-          BUILD_FEATURES_ARGS="$BUILD_FEATURES_ARGS --no-default-features"
+          NO_DEFAULT_FEATURES="--no-default-features"
         fi
-
+    
         CRATE_TYPES=""
         if [ "${{ inputs.build-library }}" == "true" ]; then
           CRATE_TYPES="--crate-type cdylib --crate-type staticlib"
         fi
-
-        RUSTFLAGS="${{ inputs.additional-rustflags }} -Zlocation-detail=none -C lto=fat"
+    
+        export RUSTFLAGS="${{ inputs.additional-rustflags }} -Zlocation-detail=none -C lto=fat"
         if [ "${{ inputs.abort-on-panic }}" == "true" ]; then
-          RUSTFLAGS="$RUSTFLAGS -C panic=abort"
+          export RUSTFLAGS="$RUSTFLAGS -C panic=abort"
           BUILD_STD_ARGS="-Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort"
         else
           BUILD_STD_ARGS="-Z build-std=std"
         fi
-
+    
         # Handle PGO
         if [ "${{ inputs.use-pgo }}" == "true" ]; then
           rustup component add llvm-tools-preview
-
-          PGO_FEATURES_ARGS="${{ inputs.features }}"
-          if [ -n "$PGO_FEATURES_ARGS" ]; then
-            PGO_FEATURES_ARGS="$PGO_FEATURES_ARGS,pgo"
-          else
-            PGO_FEATURES_ARGS="pgo"
-          fi
-
+    
+          # Normalize pgo-project-path for PGO, because it doesn't handle double slashes
+          # (user error) well.
+          PGO_PROJECT_PATH="${{ inputs.pgo-project-path }}"
+          PGO_PROJECT_PATH="${PGO_PROJECT_PATH%/}"  # Remove trailing forward slash
+          PGO_PROJECT_PATH="${PGO_PROJECT_PATH%\\}" # Remove trailing backslash
+    
           # Generate PGO profiling data
           RUSTFLAGS_BACKUP="$RUSTFLAGS"
-          RUSTFLAGS="$RUSTFLAGS -Cprofile-generate=${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}/target/pgo-profiles" $BUILD_CMD +nightly test --bench ${{ inputs.pgo-benchmark-name }} --release --target ${{ inputs.target }} --features $PGO_FEATURES_ARGS
-
+          PGO_PROFILES_FOLDER="${GITHUB_WORKSPACE}/${PGO_PROJECT_PATH}/target/pgo-profiles"
+          export RUSTFLAGS="$RUSTFLAGS -Cprofile-generate=$PGO_PROFILES_FOLDER"
+    
+          cd "${GITHUB_WORKSPACE}/${PGO_PROJECT_PATH}"
+          echo "Flags: $RUSTFLAGS"
+          echo "$BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features \"$BUILD_FEATURES_ARGS,pgo\" $NO_DEFAULT_FEATURES"
+          $BUILD_CMD +nightly test --bench ${{ inputs.pgo-benchmark-name }} --release --target ${{ inputs.target }} --features "$BUILD_FEATURES_ARGS,pgo" $NO_DEFAULT_FEATURES
+    
+          # Check if .profraw files were created
+          echo "Profiles Folder: $PGO_PROFILES_FOLDER"
+          ls "$PGO_PROFILES_FOLDER"
+          if [ ! -f "$PGO_PROFILES_FOLDER/"*.profraw ]; then
+            echo "::error::No .profraw files were created during the PGO run. PGO data generation failed."
+            exit 1
+          fi
+    
           # Merge the PGO profiles
           # This is tricky, llvm-profdata isn't in $PATH, so we need to find it ourselves.
           target_libdir=$(rustc --print target-libdir)
           bin_dir=$(dirname "$target_libdir")/bin
           llvm_profdata_path=$(find "$bin_dir" -name "llvm-profdata*" | head -n 1)
-
-          $llvm_profdata_path merge -o "${{ inputs.rust-project-path }}/target/pgo-profiles/merged.profdata" "${{ inputs.rust-project-path }}/target/pgo-profiles"
-
-          # Get sanitized path to pgo-profiles
-          if [[ "${{ inputs.rust-project-path }}" == "." ]]; then
-            sanitized_path="${GITHUB_WORKSPACE}"
-          else
-            sanitized_path="${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}"
+    
+          MERGED_PGO_PROFILE=$PGO_PROFILES_FOLDER/merged.profdata
+          $llvm_profdata_path merge -o "$MERGED_PGO_PROFILE" "$PGO_PROFILES_FOLDER"
+    
+          # Assert merged.profdata is not empty
+          echo "Merged Profiles Folder: $PGO_PROFILES_FOLDER"
+          ls "$PGO_PROFILES_FOLDER"
+          if [ ! -s "$MERGED_PGO_PROFILE" ]; then
+            # Note: RUSTFLAGS can't handle spaces, so we're kinda screwed if the path up to here
+            # has spaces in it.
+            echo "::error::merged.profdata is empty. PGO data generation failed."
+            exit 1
           fi
-
-          # Ensure the path does not end with a slash
-          sanitized_path="${sanitized_path%/}"
-
+    
           # Use the generated PGO profiling data to perform an optimized build
-          RUSTFLAGS="$RUSTFLAGS_BACKUP -C llvm-args=-pgo-warn-missing-function -C profile-use=${sanitized_path}/target/pgo-profiles/merged.profdata"
+          export RUSTFLAGS="$RUSTFLAGS_BACKUP -C llvm-args=-pgo-warn-missing-function -C profile-use=$MERGED_PGO_PROFILE"
         fi
-
-        # Build the project
+    
+        # Build the final project
         cd "${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}"
-        echo "$BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES $BUILD_FEATURES_ARGS"
-        $BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES $BUILD_FEATURES_ARGS
-
+        echo "Flags: $RUSTFLAGS"
+        echo "$BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features \"$BUILD_FEATURES_ARGS\" $NO_DEFAULT_FEATURES"
+        $BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features "$BUILD_FEATURES_ARGS" $NO_DEFAULT_FEATURES
+    
         echo "PWD: $(pwd)"
         echo "Build Dir: ${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release"
         ls "${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release"
-
-    - name: Run sccache stat for check
-      shell: bash
-      run: sccache --show-stats
 
     - name: Upload binary artifacts
       if: inputs.upload-artifacts == 'true' && inputs.build-library != 'true'
