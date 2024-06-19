@@ -171,7 +171,7 @@ Find more examples in [the tests](./.github/workflows/test-rust-build-c-library-
 
 ```yaml
 - name: Build C Library
-  uses: Reloaded-Project/devops-rust-build-c-library@v1
+  uses: Reloaded-Project/devops-rust-lightweight-binary@v1
   with:
     rust-project-path: ./rust-project
     pgo-project-path: ./pgo-project
@@ -183,7 +183,7 @@ Find more examples in [the tests](./.github/workflows/test-rust-build-c-library-
 
 ```yaml
 - name: Build C Library
-  uses: Reloaded-Project/devops-rust-build-c-library@v1
+  uses: Reloaded-Project/devops-rust-lightweight-binary@v1
   with:
     crate-name: my-crate
     target: x86_64-unknown-linux-gnu
@@ -194,7 +194,7 @@ Find more examples in [the tests](./.github/workflows/test-rust-build-c-library-
 
 ```yaml
 - name: Build C Library
-  uses: Reloaded-Project/devops-rust-build-c-library@v1
+  uses: Reloaded-Project/devops-rust-lightweight-binary@v1
   with:
     crate-name: my-crate
     target: x86_64-unknown-linux-gnu
