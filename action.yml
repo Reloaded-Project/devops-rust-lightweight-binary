@@ -68,8 +68,10 @@ runs:
     - name: Setup Rust Caching
       uses: Swatinem/rust-cache@v2
       with:
-        key: ${{ inputs.target }}
+        key: ${{ inputs.rust-project-path }}+${{ inputs.target }}
         cache-on-failure: true
+        workspaces: |
+          ${{ inputs.rust-project-path }} -> target
 
     - name: Install gcc-multilib (if on Ubuntu based System, and Target is not Host)
       if: inputs.use-cross == 'false' && runner.os == 'Linux'
