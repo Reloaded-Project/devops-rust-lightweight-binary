@@ -22,6 +22,7 @@ This action is used to build binaries with the following properties:
 - **Profile Guided Optimization (PGO)**: Improves performance by optimizing based on usage patterns.
 - **Cross-Compilation**: Supports cross-compilation using `cross-rs`.
 - **Nightly Rust**: Uses the nightly Rust toolchain for building and running.
+- **Tests and Coverage**: Optionally run tests and generate coverage reports using the `devops-rust-test-and-coverage` action.
 
 It can be used to build both binaries and C libraries.
 
@@ -86,6 +87,7 @@ test-binary-build:
         rust-project-path: "tools/cli/"
         crate-name: "prs-rs-cli"
         upload-artifacts: false
+        run-tests-and-coverage: true
 ```
 
 ## Setup
@@ -100,21 +102,23 @@ To use this action in your own repository:
 
 ### Inputs
 
-| Input                  | Required | Default          | Description                                                                            |
-| ---------------------- | -------- | ---------------- | -------------------------------------------------------------------------------------- |
-| `rust-project-path`    | No       | `.`              | Path to the Rust project                                                               |
-| `pgo-project-path`     | No       | `.`              | Path to the Rust project used for gathering PGO data. Can be same or separate project. |
-| `crate-name`           | Yes      |                  | Name of the Rust crate (used to determine file name)                                   |
-| `target`               | Yes      |                  | The target platform for the Rust compiler                                              |
-| `features`             | No       | `''`             | Comma-separated list of features to include in the build                               |
-| `no-default-features`  | No       | `false`          | Do not include default features in the build                                           |
-| `use-pgo`              | No       | `false`          | Use Profile-Guided Optimization [PGO] to build the library.                            |
-| `pgo-benchmark-name`   | No       | `'my_benchmark'` | Benchmark name to use with PGO.                                                        |
-| `use-cross`            | No       | `false`          | Use cross-rs for building. If false, use cargo.                                        |
-| `additional-rustflags` | No       | `''`             | Additional RUSTFLAGS to pass to the Rust compiler                                      |
-| `upload-artifacts`     | No       | `true`           | Upload the built artifacts as a GitHub Actions artifact                                |
-| `abort-on-panic`       | No       | `true`           | Abort immediately on panic. If false, the default panic handler is used.               |
-| `build-library`        | No       | `false`          | Build a library instead of a binary.                                                   |
+| Input                        | Required | Default          | Description                                                                            |
+| ---------------------------- | -------- | ---------------- | -------------------------------------------------------------------------------------- |
+| `rust-project-path`          | No       | `.`              | Path to the Rust project                                                               |
+| `pgo-project-path`           | No       | `.`              | Path to the Rust project used for gathering PGO data. Can be same or separate project. |
+| `crate-name`                 | Yes      |                  | Name of the Rust crate (used to determine file name)                                   |
+| `target`                     | Yes      |                  | The target platform for the Rust compiler                                              |
+| `features`                   | No       | `''`             | Comma-separated list of features to include in the build                               |
+| `no-default-features`        | No       | `false`          | Do not include default features in the build                                           |
+| `use-pgo`                    | No       | `false`          | Use Profile-Guided Optimization [PGO] to build the library.                            |
+| `pgo-benchmark-name`         | No       | `'my_benchmark'` | Benchmark name to use with PGO.                                                        |
+| `use-cross`                  | No       | `false`          | Use cross-rs for building. If false, use cargo.                                        |
+| `additional-rustflags`       | No       | `''`             | Additional RUSTFLAGS to pass to the Rust compiler                                      |
+| `upload-artifacts`           | No       | `true`           | Upload the built artifacts as a GitHub Actions artifact                                |
+| `abort-on-panic`             | No       | `true`           | Abort immediately on panic. If false, the default panic handler is used.               |
+| `build-library`              | No       | `false`          | Build a library instead of a binary.                                                   |
+| `run-tests-and-coverage`     | No       | `false`          | Run tests and coverage using the `devops-rust-test-and-coverage` action.               |
+| `upload-coverage-to-codecov` | No       | `true`           | Uploads coverage to codecov if `run-tests-and-coverage` is enabled.                    |
 
 ### Setting up Profile-Guided Optimization (PGO)
 
@@ -154,6 +158,20 @@ use-cross: true
 ```
 
 If the process fails, your CI will fail, so do experiment.
+
+## Running Tests and Coverage
+
+To run tests and generate coverage reports as part of the build process, set the
+`run-tests-and-coverage` input to `true`.
+
+This will invoke the [devops-rust-test-and-coverage][devops-test-coverage] action after the build
+step, using the same configuration as the build (e.g., `target`, `features`, `use-cross`, etc.).
+
+The `devops-rust-test-and-coverage` action will run tests using either `cargo` or `cross`,
+depending on the `use-cross` input. If `use-cross` is `false`, it will also generate a coverage
+report using Tarpaulin and upload it to Codecov (if `upload-coverage` is `true`).
+
+Note that code coverage is skipped when using `cross` due to incompatibility with Tarpaulin.
 
 ## Building Libraries
 
@@ -232,3 +250,5 @@ please open an issue or submit a pull request in this repository.
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+[devops-test-coverage]: https://github.com/Reloaded-Project/devops-rust-test-and-coverage

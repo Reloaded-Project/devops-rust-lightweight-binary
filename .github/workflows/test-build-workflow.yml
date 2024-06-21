@@ -65,7 +65,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Sewer56/prs-rs
-          ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
+          ref: 149060527e685360687d7332742ac016b39af8a7
       - name: Test Binary Build
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -104,10 +104,11 @@ jobs:
             target: i686-pc-windows-msvc
             use-pgo: true
             use-cross: false
-          - os: windows-latest
-            target: aarch64-pc-windows-msvc
-            use-pgo: false # no virtualization support (proprietary OS)
-            use-cross: false
+          # No native host to run tests and proprietary compiler.
+          #- os: windows-latest
+          #  target: aarch64-pc-windows-msvc
+          #  use-pgo: false # no virtualization support (proprietary OS)
+          #  use-cross: false
           - os: macos-13 # x86
             target: x86_64-apple-darwin
             use-pgo: true
@@ -122,7 +123,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Sewer56/prs-rs
-          ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
+          ref: 149060527e685360687d7332742ac016b39af8a7
       - name: Test Library Build
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -133,6 +134,8 @@ jobs:
           features: "c-exports"
           build-library: true
           upload-artifacts: false
+          run-tests-and-coverage: true
+          upload-coverage-to-codecov: false
 
   # This tests gathering PGO data on a host, and building for a different target.
   test-pgo-with-cross-compile:
@@ -142,7 +145,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Sewer56/prs-rs
-          ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
+          ref: 149060527e685360687d7332742ac016b39af8a7
       - name: Test PGO with Cross-Compilation (Binary)
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -172,7 +175,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Sewer56/prs-rs
-          ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
+          ref: 149060527e685360687d7332742ac016b39af8a7
       - name: Test Library Feature Build
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -189,7 +192,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Sewer56/prs-rs
-          ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
+          ref: 149060527e685360687d7332742ac016b39af8a7
       - name: Test Library No Default Features
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -207,7 +210,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Sewer56/prs-rs
-          ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
+          ref: 149060527e685360687d7332742ac016b39af8a7
       - name: Test Binary PGO with Library
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -226,7 +229,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Sewer56/prs-rs
-          ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
+          ref: 149060527e685360687d7332742ac016b39af8a7
       - name: Test Library PGO
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -244,7 +247,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Sewer56/prs-rs
-          ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
+          ref: 149060527e685360687d7332742ac016b39af8a7
       - name: Test Custom RUSTFLAGS (Binary)
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -269,7 +272,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Sewer56/prs-rs
-          ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
+          ref: 149060527e685360687d7332742ac016b39af8a7
 
       - name: Test Artifact Upload (Binary)
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
