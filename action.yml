@@ -74,6 +74,11 @@ inputs:
     description: 'Additional build-std features to include (comma-separated).'
     required: false
     default: ''
+  use-tarpaulin:
+    description: 'Use tarpaulin for code coverage. If false, code coverage will be disabled.'
+    required: false
+    default: true
+
 runs:
   using: 'composite'
   steps:
@@ -267,3 +272,4 @@ runs:
         features: ${{ inputs.features }}
         no-default-features: ${{ inputs.no-default-features }}
         use-cross: ${{ inputs.use-cross }}
+        use-tarpaulin: ${{ inputs.use-tarpaulin }}

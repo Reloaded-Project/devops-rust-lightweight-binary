@@ -39,38 +39,48 @@ test-binary-build:
           target: x86_64-unknown-linux-gnu
           use-pgo: true
           use-cross: false
+          use-tarpaulin: true
         - os: ubuntu-latest
           target: i686-unknown-linux-gnu
           use-pgo: true
           use-cross: false
+          use-tarpaulin: true
         - os: ubuntu-latest
           target: aarch64-unknown-linux-gnu
           use-pgo: false # no native runner
           use-cross: true
+          use-tarpaulin: true
         - os: ubuntu-latest
           target: armv7-unknown-linux-gnueabihf
           use-pgo: false # no native runner
           use-cross: true
+          use-tarpaulin: true
         - os: windows-latest
           target: x86_64-pc-windows-msvc
           use-pgo: true
           use-cross: false
+          use-tarpaulin: true
         - os: windows-latest
           target: i686-pc-windows-msvc
           use-pgo: true
           use-cross: false
-        - os: windows-latest
-          target: aarch64-pc-windows-msvc
-          use-pgo: false # no native runner
-          use-cross: false
+          use-tarpaulin: true
+        # no native github actions runner or cross-rs image
+        #- os: windows-latest
+        #  target: aarch64-pc-windows-msvc
+        #  use-pgo: false # no native runner
+        #  use-cross: false
+        #  use-tarpaulin: true
         - os: macos-13 # x86
           target: x86_64-apple-darwin
           use-pgo: true
           use-cross: false
+          use-tarpaulin: true
         - os: macos-14 # M1
           target: aarch64-apple-darwin
           use-pgo: true
           use-cross: false
+          use-tarpaulin: true
   runs-on: ${{ matrix.os }}
   steps:
     - name: Checkout Test Repository
@@ -84,6 +94,7 @@ test-binary-build:
         target: ${{ matrix.target }}
         use-pgo: ${{ matrix.use-pgo }}
         use-cross: ${{ matrix.use-cross }}
+        use-tarpaulin: ${{ matrix.use-tarpaulin }}
         rust-project-path: "tools/cli/"
         crate-name: "prs-rs-cli"
         upload-artifacts: false
@@ -121,6 +132,7 @@ To use this action in your own repository:
 | `upload-coverage-to-codecov` | No       | `true`           | Uploads coverage to codecov if `run-tests-and-coverage` is enabled.                    |
 | `size-optimized-std`         | No       | `false`          | Builds `std` with size optimizations, such as reduced `core::fmt` footprint.           |
 | `additional-std-features`    | No       | ``               | Specify extra `build-std` features.                                                    |
+| `use-tarpaulin`              | No       | `true`           | Use tarpaulin for code coverage. If false, code coverage will be disabled.             |
 
 ### Setting up Profile-Guided Optimization (PGO)
 
@@ -170,10 +182,10 @@ This will invoke the [devops-rust-test-and-coverage][devops-test-coverage] actio
 step, using the same configuration as the build (e.g., `target`, `features`, `use-cross`, etc.).
 
 The `devops-rust-test-and-coverage` action will run tests using either `cargo` or `cross`,
-depending on the `use-cross` input. If `use-cross` is `false`, it will also generate a coverage
-report using Tarpaulin and upload it to Codecov (if `upload-coverage` is `true`).
+depending on the `use-cross` input. If `use-cross` is `false` and `use-tarpaulin` is `true`, it
+will also generate a coverage report using Tarpaulin and upload it to Codecov (if `upload-coverage` is `true`).
 
-Note that code coverage is skipped when using `cross` due to incompatibility with Tarpaulin.
+If `cross` is enabled, `use-tarpaulin` is ignored.
 
 ## Building Libraries
 
