@@ -119,6 +119,8 @@ To use this action in your own repository:
 | `build-library`              | No       | `false`          | Build a library instead of a binary.                                                   |
 | `run-tests-and-coverage`     | No       | `false`          | Run tests and coverage using the `devops-rust-test-and-coverage` action.               |
 | `upload-coverage-to-codecov` | No       | `true`           | Uploads coverage to codecov if `run-tests-and-coverage` is enabled.                    |
+| `size-optimized-std`         | No       | `false`          | Builds `std` with size optimizations, such as reduced `core::fmt` footprint.           |
+| `additional-std-features`    | No       | ``               | Specify extra `build-std` features.                                                    |
 
 ### Setting up Profile-Guided Optimization (PGO)
 
