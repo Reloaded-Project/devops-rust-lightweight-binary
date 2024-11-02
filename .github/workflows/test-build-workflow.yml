@@ -281,6 +281,7 @@ jobs:
           target: x86_64-unknown-linux-gnu
           additional-rustflags: -C opt-level=3
           upload-artifacts: false
+          size-optimized-std: true
       - name: Test Custom RUSTFLAGS (Library)
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
