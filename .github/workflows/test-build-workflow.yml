@@ -105,10 +105,11 @@ jobs:
             use-pgo: true
             use-cross: false
           # No native host to run tests and proprietary compiler.
-          #- os: windows-latest
-          #  target: aarch64-pc-windows-msvc
-          #  use-pgo: false # no virtualization support (proprietary OS)
-          #  use-cross: false
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            use-pgo: false # no virtualization support (proprietary OS)
+            use-cross: false
+            use-tarpaulin: false # tarpaulin is broken on Windows ARM64
           - os: macos-13 # x86
             target: x86_64-apple-darwin
             use-pgo: true
@@ -131,6 +132,7 @@ jobs:
           target: ${{ matrix.target }}
           use-pgo: ${{ matrix.use-pgo }}
           use-cross: ${{ matrix.use-cross }}
+          use-tarpaulin: ${{ matrix.use-tarpaulin || true }}
           features: "c-exports"
           build-library: true
           upload-artifacts: false
