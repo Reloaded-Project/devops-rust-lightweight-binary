@@ -65,11 +65,12 @@ test-binary-build:
           use-pgo: true
           use-cross: false
           use-tarpaulin: true
-        - os: windows-latest
-          target: aarch64-pc-windows-msvc
-          use-pgo: false # no native runner
-          use-cross: false
-          use-tarpaulin: false # tarpaulin is broken on Windows ARM64
+        # no native github actions runner or cross-rs image
+        #- os: windows-latest
+        #  target: aarch64-pc-windows-msvc
+        #  use-pgo: false # no native runner
+        #  use-cross: false
+        #  use-tarpaulin: true
         - os: macos-13 # x86
           target: x86_64-apple-darwin
           use-pgo: true
