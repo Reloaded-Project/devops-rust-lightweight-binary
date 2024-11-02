@@ -39,26 +39,32 @@ test-binary-build:
           target: x86_64-unknown-linux-gnu
           use-pgo: true
           use-cross: false
+          use-tarpaulin: true
         - os: ubuntu-latest
           target: i686-unknown-linux-gnu
           use-pgo: true
           use-cross: false
+          use-tarpaulin: true
         - os: ubuntu-latest
           target: aarch64-unknown-linux-gnu
           use-pgo: false # no native runner
           use-cross: true
+          use-tarpaulin: true
         - os: ubuntu-latest
           target: armv7-unknown-linux-gnueabihf
           use-pgo: false # no native runner
           use-cross: true
+          use-tarpaulin: true
         - os: windows-latest
           target: x86_64-pc-windows-msvc
           use-pgo: true
           use-cross: false
+          use-tarpaulin: true
         - os: windows-latest
           target: i686-pc-windows-msvc
           use-pgo: true
           use-cross: false
+          use-tarpaulin: true
         - os: windows-latest
           target: aarch64-pc-windows-msvc
           use-pgo: false # no native runner
@@ -68,10 +74,12 @@ test-binary-build:
           target: x86_64-apple-darwin
           use-pgo: true
           use-cross: false
+          use-tarpaulin: true
         - os: macos-14 # M1
           target: aarch64-apple-darwin
           use-pgo: true
           use-cross: false
+          use-tarpaulin: true
   runs-on: ${{ matrix.os }}
   steps:
     - name: Checkout Test Repository
@@ -85,7 +93,7 @@ test-binary-build:
         target: ${{ matrix.target }}
         use-pgo: ${{ matrix.use-pgo }}
         use-cross: ${{ matrix.use-cross }}
-        use-tarpaulin: ${{ matrix.use-tarpaulin || true }}
+        use-tarpaulin: ${{ matrix.use-tarpaulin }}
         rust-project-path: "tools/cli/"
         crate-name: "prs-rs-cli"
         upload-artifacts: false
