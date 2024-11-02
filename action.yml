@@ -66,7 +66,14 @@ inputs:
   codecov-token:
     description: 'Codecov token for uploading coverage'
     required: false
-
+  size-optimized-std:
+    description: 'Enable size optimization for std by adding `optimize_for_size` to build-std-features.'
+    required: false
+    default: false
+  additional-std-features:
+    description: 'Additional build-std features to include (comma-separated).'
+    required: false
+    default: ''
 runs:
   using: 'composite'
   steps:
@@ -134,12 +141,33 @@ runs:
           CRATE_TYPES="--crate-type cdylib --crate-type staticlib"
         fi
     
+        # Initialize RUSTFLAGS
         export RUSTFLAGS="${{ inputs.additional-rustflags }} -Zlocation-detail=none -C lto=fat"
+
+        # Initialize build-std and build-std-features
+        BUILD_STD_ARGS="-Z build-std=std"
+        BUILD_STD_FEATURES=()
+
         if [ "${{ inputs.abort-on-panic }}" == "true" ]; then
           export RUSTFLAGS="$RUSTFLAGS -C panic=abort"
-          BUILD_STD_ARGS="-Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort"
-        else
-          BUILD_STD_ARGS="-Z build-std=std"
+          BUILD_STD_ARGS="$BUILD_STD_ARGS,panic_abort"
+          BUILD_STD_FEATURES+=("panic_immediate_abort")
+        fi
+
+        if [ "${{ inputs.size-optimized-std }}" == "true" ]; then
+          BUILD_STD_FEATURES+=("optimize_for_size")
+        fi
+
+        # Build build-std-features string.
+        if [ "${{ inputs.additional-std-features }}" != "" ]; then
+          IFS=',' read -ra ADDITIONAL_FEATURES <<< "${{ inputs.additional-std-features }}"
+          for feature in "${ADDITIONAL_FEATURES[@]}"; do
+            BUILD_STD_FEATURES+=("$feature")
+          done
+        fi
+
+        if [ ${#BUILD_STD_FEATURES[@]} -gt 0 ]; then
+          BUILD_STD_ARGS="$BUILD_STD_ARGS -Z build-std-features=$(IFS=, ; echo "${BUILD_STD_FEATURES[*]}")"
         fi
     
         # Handle PGO
