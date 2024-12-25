@@ -116,6 +116,7 @@ To use this action in your own repository:
 | Input                        | Required | Default          | Description                                                                            |
 | ---------------------------- | -------- | ---------------- | -------------------------------------------------------------------------------------- |
 | `rust-project-path`          | No       | `.`              | Path to the Rust project                                                               |
+| `workspace-path`             | No       | `.`              | Workspace folder where `target` directory is. Uses `rust-project-path` if not set.     |
 | `pgo-project-path`           | No       | `.`              | Path to the Rust project used for gathering PGO data. Can be same or separate project. |
 | `crate-name`                 | Yes      |                  | Name of the Rust crate (used to determine file name)                                   |
 | `target`                     | Yes      |                  | The target platform for the Rust compiler                                              |

@@ -302,6 +302,25 @@ jobs:
           build-library: true
           size-optimized-std: true
 
+  # Can build a project in a workspace.
+  test-workspace-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Test Repository
+        uses: actions/checkout@v4
+        with:
+          repository: Sewer56/dxt-lossless-transform
+          ref: d47afd9a7c2fa71495b6d942853b0fe41f258e26
+
+      - name: Test Workspace Build
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
+        with:
+          rust-project-path: projects/dxt-lossless-transform-cli
+          workspace-path: "."
+          crate-name: dxt-lossless-transform-cli
+          target: x86_64-unknown-linux-gnu
+          upload-artifacts: true
+
   test-artifact-upload:
     runs-on: ubuntu-latest
     steps:
@@ -341,7 +360,7 @@ jobs:
       - name: Download Library Artifact
         uses: actions/download-artifact@v4
         with:
-          name: C-Library-x86_64-unknown-linux-gnu-
+          name: C-Library-prs-rs-x86_64-unknown-linux-gnu-
 
       - name: Assert Library Artifact
         shell: bash
