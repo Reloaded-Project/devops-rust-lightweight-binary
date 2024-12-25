@@ -14,7 +14,7 @@ inputs:
     required: false
     default: '.'
   crate-name:
-    description: 'Name of the Rust crate (used to determine file name)'
+    description: 'Name of the Rust crate/package. This can be used to select a crate within a workspace.'
     required: true
   target:
     description: 'The target platform for the Rust compiler'
@@ -26,11 +26,11 @@ inputs:
   no-default-features:
     description: 'Do not include default features in the build'
     required: false
-    default: false
+    default: "false"
   use-pgo:
     description: 'Use Profile-Guided Optimization [PGO] to build the artifact.'
     required: false
-    default: false
+    default: "false"
   pgo-benchmark-name:
     description: 'Benchmark name to use with PGO.'
     required: false
@@ -38,7 +38,7 @@ inputs:
   use-cross:
     description: 'Use cross-rs for building. If false, use cargo.'
     required: false
-    default: false
+    default: "false"
   additional-rustflags:
     description: 'Additional RUSTFLAGS to pass to the Rust compiler'
     required: false
@@ -46,30 +46,30 @@ inputs:
   upload-artifacts:
     description: 'Upload the built artifacts as a GitHub Actions artifact'
     required: false
-    default: true
+    default: "true"
   abort-on-panic:
     description: 'Abort immediately on panic. If false, the default panic handler is used.'
     required: false
-    default: true
+    default: "true"
   build-library:
     description: 'Build a library instead of a binary. Requires `crate-type = ["cdylib", "staticlib"]` in Cargo.toml.'
     required: false
-    default: false
+    default: "false"
   run-tests-and-coverage:
     description: 'Run tests and coverage using the `devops-rust-test-and-coverage` action.'
     required: false
-    default: false
+    default: "false"
   upload-coverage-to-codecov:
     description: 'Uploads coverage to codecov if `run-tests-and-coverage` is enabled.'
     required: false
-    default: true
+    default: "true"
   codecov-token:
     description: 'Codecov token for uploading coverage'
     required: false
   size-optimized-std:
     description: 'Enable size optimization for std by adding `optimize_for_size` to build-std-features.'
     required: false
-    default: false
+    default: "false"
   additional-std-features:
     description: 'Additional build-std features to include (comma-separated).'
     required: false
@@ -77,7 +77,11 @@ inputs:
   use-tarpaulin:
     description: 'Use tarpaulin for code coverage. If false, code coverage will be disabled.'
     required: false
-    default: true
+    default: "true"
+  workspace-path:
+    description: 'Path to the workspace root. Defaults to rust-project-path if not specified.'
+    required: false
+    default: ''
 
 runs:
   using: 'composite'
@@ -88,13 +92,38 @@ runs:
         cache: false
         toolchain: nightly
 
+    - name: Determine workspace path
+      shell: bash
+      run: |
+        WORKSPACE_PATH="${{ inputs.workspace-path }}"
+        if [ -z "$WORKSPACE_PATH" ]; then
+          WORKSPACE_PATH="${{ inputs.rust-project-path }}"
+        fi
+        echo "WORKSPACE_PATH=${WORKSPACE_PATH}" >> $GITHUB_ENV
+
+    - name: Setup artifact directory
+      shell: bash
+      run: |
+        # Create a unique output directory based on crate, target and features
+        # Sanitize features string to be filesystem safe
+        SAFE_FEATURES=$(echo "${{ inputs.features }}" | tr -dc '[:alnum:],_-' | tr ',' '-')
+        if [ -z "$SAFE_FEATURES" ]; then
+          SAFE_FEATURES="no-features"
+        fi
+        
+        # Note: This directory has been crafted to be unique, and within 'target' for caching.
+        # Unique such that different project builds within the same workspace generate valid artifacts
+        ARTIFACT_OUT_DIR="${GITHUB_WORKSPACE}/${{ env.WORKSPACE_PATH }}/artifact-out/${{ inputs.crate-name }}/${{ inputs.target }}/${SAFE_FEATURES}"
+        mkdir -p "$ARTIFACT_OUT_DIR"
+        echo "ARTIFACT_OUT_DIR=${ARTIFACT_OUT_DIR}" >> $GITHUB_ENV
+
     - name: Setup Rust Caching
       uses: Swatinem/rust-cache@v2
       with:
-        key: ${{ inputs.rust-project-path }}+${{ inputs.target }}
+        key: workspace-${{ env.WORKSPACE_PATH }}+${{ inputs.target }}
         cache-on-failure: true
         workspaces: |
-          ${{ inputs.rust-project-path }} -> target
+          ${{ env.WORKSPACE_PATH }} -> target
 
     - name: Install gcc-multilib (if on Ubuntu based System, and Target is not Host)
       if: inputs.use-cross == 'false' && runner.os == 'Linux'
@@ -115,7 +144,7 @@ runs:
 
     - name: Setup Rust Toolchain
       shell: bash
-      working-directory: ${{ inputs.rust-project-path }}
+      working-directory: ${{ env.WORKSPACE_PATH }}
       run: |
         rustup target add ${{ inputs.target }}
         rustup component add rust-src --toolchain nightly
@@ -228,41 +257,42 @@ runs:
     
         # Build the final project
         cd "${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}"
+
+        ## Create Reference File for Date Comparison
+        mkdir -p "${{ env.ARTIFACT_OUT_DIR }}"
+        touch "${{ env.ARTIFACT_OUT_DIR }}/build_start"
+
+        ## Build
         echo "Flags: $RUSTFLAGS"
         echo "$BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features \"$BUILD_FEATURES_ARGS\" $NO_DEFAULT_FEATURES"
         $BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features "$BUILD_FEATURES_ARGS" $NO_DEFAULT_FEATURES
-    
-        echo "PWD: $(pwd)"
-        echo "Build Dir: ${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release"
-        ls "${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release"
+
+        ## Copy all new files (no directories) from release dir to artifact dir
+        find "${GITHUB_WORKSPACE}/${{ env.WORKSPACE_PATH }}/target/${{ inputs.target }}/release" -type f -newer "${{ env.ARTIFACT_OUT_DIR }}/build_start" -maxdepth 1 -exec cp {} "${{ env.ARTIFACT_OUT_DIR }}/" \;
+        rm "${{ env.ARTIFACT_OUT_DIR }}/build_start"
+
+        echo "Artifacts directory contents:"
+        ls "${{ env.ARTIFACT_OUT_DIR }}"
 
     - name: Upload binary artifacts
       if: inputs.upload-artifacts == 'true' && inputs.build-library != 'true'
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}
-        path: |
-          ${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release/${{ inputs.crate-name }}*
-          !${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release/${{ inputs.crate-name }}*.d
+        path: ${{ env.ARTIFACT_OUT_DIR }}
         
     - name: Upload library artifacts
       if: inputs.upload-artifacts == 'true' && inputs.build-library == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: C-Library-${{ inputs.target }}-${{ inputs.features }}
-        path: |
-          ${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release/*.a
-          ${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release/*.so
-          ${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release/*.lib
-          ${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release/*.dll
-          ${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release/*.pdb
-          ${{ inputs.rust-project-path }}/target/${{ inputs.target }}/release/*.dylib
+        name: C-Library-${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}
+        path: ${{ env.ARTIFACT_OUT_DIR }}
 
     - name: Run Tests and Coverage
       if: inputs.run-tests-and-coverage == 'true'
       uses: Reloaded-Project/devops-rust-test-and-coverage@v1
       with:
-        rust-project-path: ${{ inputs.rust-project-path }}
+        rust-project-path: ${{ env.WORKSPACE_PATH }}
         rust-toolchain: nightly
         target: ${{ inputs.target }}
         install-rust-toolchain: false

@@ -341,7 +341,7 @@ jobs:
       - name: Download Library Artifact
         uses: actions/download-artifact@v4
         with:
-          name: C-Library-x86_64-unknown-linux-gnu-
+          name: C-Library-prs-rs-x86_64-unknown-linux-gnu-
 
       - name: Assert Library Artifact
         shell: bash
