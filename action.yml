@@ -111,9 +111,19 @@ runs:
           SAFE_FEATURES="no-features"
         fi
         
+        # Sanitize workspace path - convert '.' to empty string
+        WORKSPACE_PATH=$(echo "${{ env.WORKSPACE_PATH }}" | sed 's/^\.$//') 
+
+        # Construct base path, adding slash only if WORKSPACE_PATH is not empty
+        if [ -n "$WORKSPACE_PATH" ]; then
+          BASE_PATH="${GITHUB_WORKSPACE}/${WORKSPACE_PATH}/"
+        else
+          BASE_PATH="${GITHUB_WORKSPACE}/"
+        fi
+
         # Note: This directory has been crafted to be unique, and within 'target' for caching.
         # Unique such that different project builds within the same workspace generate valid artifacts
-        ARTIFACT_OUT_DIR="${GITHUB_WORKSPACE}/${{ env.WORKSPACE_PATH }}/artifact-out/${{ inputs.crate-name }}/${{ inputs.target }}/${SAFE_FEATURES}"
+        ARTIFACT_OUT_DIR="${BASE_PATH}artifact-out/${{ inputs.crate-name }}/${{ inputs.target }}/${SAFE_FEATURES}"
         mkdir -p "$ARTIFACT_OUT_DIR"
         echo "ARTIFACT_OUT_DIR=${ARTIFACT_OUT_DIR}" >> $GITHUB_ENV
 
