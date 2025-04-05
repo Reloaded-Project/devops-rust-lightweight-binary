@@ -82,6 +82,10 @@ inputs:
     description: 'Path to the workspace root. Defaults to rust-project-path if not specified.'
     required: false
     default: ''
+  use-cache:
+    description: 'Enable or disable the build cache using Swatinem/rust-cache.'
+    required: false
+    default: "true"
 
 runs:
   using: 'composite'
@@ -136,6 +140,7 @@ runs:
         echo "SAFE_ADDITIONAL_STD_FEATURES=${SAFE_ADDITIONAL_STD_FEATURES}" >> $GITHUB_ENV
 
     - name: Setup Rust Caching
+      if: inputs.use-cache == 'true'
       uses: Swatinem/rust-cache@v2
       with:
         key: build-${{ env.WORKSPACE_PATH }}-${{ inputs.crate-name }}-${{ inputs.target }}-${{ env.SAFE_FEATURES }}-${{ env.SAFE_ADDITIONAL_STD_FEATURES }}-${{ inputs.no-default-features }}-${{ inputs.build-library }}-${{ inputs.crate-types }}-${{ inputs.use-cross }}

@@ -126,6 +126,7 @@ To use this action in your own repository:
 | `pgo-benchmark-name`         | No       | `'my_benchmark'` | Benchmark name to use with PGO.                                                        |
 | `use-cross`                  | No       | `false`          | Use cross-rs for building. If false, use cargo.                                        |
 | `additional-rustflags`       | No       | `''`             | Additional RUSTFLAGS to pass to the Rust compiler                                      |
+| `use-cache`                  | No       | `true`           | Enable or disable the build cache using `Swatinem/rust-cache`.                         |
 | `upload-artifacts`           | No       | `true`           | Upload the built artifacts as a GitHub Actions artifact                                |
 | `abort-on-panic`             | No       | `true`           | Abort immediately on panic. If false, the default panic handler is used.               |
 | `build-library`              | No       | `false`          | Build a library instead of a binary.                                                   |
@@ -232,6 +233,68 @@ Find more examples in [the tests](./.github/workflows/test-rust-build-c-library-
     crate-name: my-crate
     target: x86_64-unknown-linux-gnu
     additional-rustflags: -C opt-level=3
+```
+
+### Building Multiple Projects
+
+#### Serial Builds (Single Job)
+
+If you are building multiple projects, for example multiple projects in a single workspace, 
+build them in a single job:
+
+```yaml
+- name: Build API Crate
+  uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+  with:
+    rust-project-path: projects/api-crate
+    crate-name: api-crate
+    target: x86_64-unknown-linux-gnu
+    use-cache: true  # Only first build enables cache
+    upload-artifacts: true
+
+- name: Build CLI Crate
+  uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+  with:
+    rust-project-path: projects/cli-crate
+    crate-name: cli-crate
+    target: x86_64-unknown-linux-gnu
+    use-cache: false  # Subsequent builds disable cache
+    upload-artifacts: true
+```
+
+The cache is restored in `Build API Crate` and saved after completion of `Build CLI Crate`.
+So you should only set `use-cache` on the first project.
+
+#### Parallel Builds
+
+If you are building multiple projects with either different compiler settings, features, or targets, 
+build them in separate jobs:
+
+```yaml
+jobs:
+  build-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+        with:
+          rust-project-path: projects/api-crate
+          crate-name: api-crate
+          target: x86_64-unknown-linux-gnu
+          use-cache: true # this is the default
+          upload-artifacts: true
+
+  build-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+        with:
+          rust-project-path: projects/cli-crate
+          crate-name: cli-crate
+          target: x86_64-unknown-linux-gnu
+          use-cache: true # this is the default
+          upload-artifacts: true
 ```
 
 ## Accessing the Built Artifacts
