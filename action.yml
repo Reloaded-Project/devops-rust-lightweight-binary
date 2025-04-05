@@ -133,6 +133,7 @@ runs:
       with:
         key: workspace-${{ env.WORKSPACE_PATH }}-${{ inputs.crate-name }}-${{ inputs.target }}-${{ env.SAFE_FEATURES }}-${{ inputs.additional-std-features }}
         cache-on-failure: true
+        cache-all-crates: true
         workspaces: |
           ${{ env.WORKSPACE_PATH }} -> target
 
