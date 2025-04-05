@@ -126,11 +126,12 @@ runs:
         ARTIFACT_OUT_DIR="${BASE_PATH}artifact-out/${{ inputs.crate-name }}/${{ inputs.target }}/${SAFE_FEATURES}"
         mkdir -p "$ARTIFACT_OUT_DIR"
         echo "ARTIFACT_OUT_DIR=${ARTIFACT_OUT_DIR}" >> $GITHUB_ENV
+        echo "SAFE_FEATURES=${SAFE_FEATURES}" >> $GITHUB_ENV
 
     - name: Setup Rust Caching
       uses: Swatinem/rust-cache@v2
       with:
-        key: workspace-${{ env.WORKSPACE_PATH }}-${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}-${{ inputs.additional-std-features }}
+        key: workspace-${{ env.WORKSPACE_PATH }}-${{ inputs.crate-name }}-${{ inputs.target }}-${{ env.SAFE_FEATURES }}-${{ inputs.additional-std-features }}
         cache-on-failure: true
         workspaces: |
           ${{ env.WORKSPACE_PATH }} -> target
