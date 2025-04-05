@@ -111,6 +111,12 @@ runs:
           SAFE_FEATURES="no-features"
         fi
         
+        # Sanitize additional-std-features string to be filesystem safe
+        SAFE_ADDITIONAL_STD_FEATURES=$(echo "${{ inputs.additional-std-features }}" | tr -dc '[:alnum:],_-' | tr ',' '-')
+        if [ -z "$SAFE_ADDITIONAL_STD_FEATURES" ]; then
+          SAFE_ADDITIONAL_STD_FEATURES="no-std-features"
+        fi
+
         # Sanitize workspace path - convert '.' to empty string
         WORKSPACE_PATH=$(echo "${{ env.WORKSPACE_PATH }}" | sed 's/^\.$//') 
 
@@ -127,11 +133,12 @@ runs:
         mkdir -p "$ARTIFACT_OUT_DIR"
         echo "ARTIFACT_OUT_DIR=${ARTIFACT_OUT_DIR}" >> $GITHUB_ENV
         echo "SAFE_FEATURES=${SAFE_FEATURES}" >> $GITHUB_ENV
+        echo "SAFE_ADDITIONAL_STD_FEATURES=${SAFE_ADDITIONAL_STD_FEATURES}" >> $GITHUB_ENV
 
     - name: Setup Rust Caching
       uses: Swatinem/rust-cache@v2
       with:
-        key: workspace-${{ env.WORKSPACE_PATH }}-${{ inputs.crate-name }}-${{ inputs.target }}-${{ env.SAFE_FEATURES }}-${{ inputs.additional-std-features }}
+        key: build-${{ env.WORKSPACE_PATH }}-${{ inputs.crate-name }}-${{ inputs.target }}-${{ env.SAFE_FEATURES }}-${{ env.SAFE_ADDITIONAL_STD_FEATURES }}-${{ inputs.no-default-features }}-${{ inputs.build-library }}-${{ inputs.crate-types }}-${{ inputs.use-cross }}
         cache-on-failure: true
         cache-all-crates: true
         workspaces: |
