@@ -130,7 +130,7 @@ runs:
     - name: Setup Rust Caching
       uses: Swatinem/rust-cache@v2
       with:
-        key: workspace-${{ env.WORKSPACE_PATH }}+${{ inputs.target }}
+        key: workspace-${{ env.WORKSPACE_PATH }}-${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}-${{ inputs.additional-std-features }}
         cache-on-failure: true
         workspaces: |
           ${{ env.WORKSPACE_PATH }} -> target
