@@ -265,6 +265,22 @@ build them in a single job:
 The cache is restored in `Build API Crate` and saved after completion of `Build CLI Crate`.
 So you should only set `use-cache` on the first project.
 
+> [!WARNING]
+>
+> If you are using [devops-test-coverage] action, that also creates a cache by default.
+> Be aware of this, you may want to set `use-cache` false if running tests at the end, or set
+> `use-cache` false on `devops-rust-lightweight-binary` if tests are ran first.
+> 
+> ```yaml
+> - name: Run Tests
+>   uses: Reloaded-Project/devops-rust-test-and-coverage@v1
+>   with:
+>     target: ${{ matrix.target }}
+>     use-cross: ${{ matrix.use-cross }}
+>     codecov-token: ${{ secrets.CODECOV_TOKEN }}\
+>     # use-cache: true # use-cache is enabled by default
+> ```
+
 #### Parallel Builds
 
 If you are building multiple projects with either different compiler settings, features, or targets, 
