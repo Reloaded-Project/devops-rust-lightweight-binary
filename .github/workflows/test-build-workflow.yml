@@ -303,6 +303,8 @@ jobs:
           size-optimized-std: true
 
   # Can build a project in a workspace.
+  # It's important caching works for both projects here; so check logs even
+  # if this passes.
   test-workspace-build:
     runs-on: ubuntu-latest
     steps:
@@ -312,13 +314,23 @@ jobs:
           repository: Sewer56/dxt-lossless-transform
           ref: d47afd9a7c2fa71495b6d942853b0fe41f258e26
 
-      - name: Test Workspace Build
+      - name: Test Workspace Build (CLI)
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
           rust-project-path: projects/dxt-lossless-transform-cli
           workspace-path: "."
           crate-name: dxt-lossless-transform-cli
           target: x86_64-unknown-linux-gnu
+          upload-artifacts: true
+
+      - name: Test Workspace Build (API)
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
+        with:
+          rust-project-path: projects/dxt-lossless-transform-api
+          workspace-path: "."
+          crate-name: dxt-lossless-transform-api
+          target: x86_64-unknown-linux-gnu
+          features: "c-exports"
           upload-artifacts: true
 
   test-artifact-upload:
