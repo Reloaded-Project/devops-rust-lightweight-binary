@@ -76,6 +76,23 @@ jobs:
           crate-name: "prs-rs-cli"
           upload-artifacts: false
   
+  test-build-without-native-host-tools:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Test Repository
+        uses: actions/checkout@v4
+        with:
+          repository: Sewer56/prs-rs
+          ref: 149060527e685360687d7332742ac016b39af8a7
+      - name: Test Android Armv7 Build
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
+        with:
+          rust-project-path: tools/cli
+          crate-name: prs-rs-cli
+          target: armv7-linux-androideabi
+          use-cross: true
+          upload-artifacts: false
+
   test-library-build:
     strategy:
       matrix:

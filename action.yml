@@ -176,7 +176,10 @@ runs:
       run: |
         rustup target add ${{ inputs.target }}
         rustup component add rust-src --toolchain nightly
-        rustup toolchain install nightly-${{ inputs.target }} --force-non-host
+        if [ "${{ inputs.use-cross }}" != "true" ]; then
+          # Install native toolchain to build with, otherwise it's provided by cross.
+          rustup toolchain install nightly-${{ inputs.target }} --force-non-host
+        fi
 
         # Install cross-rs if needed
         if [ "${{ inputs.use-cross }}" == "true" ]; then
