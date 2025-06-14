@@ -43,6 +43,10 @@ inputs:
     description: 'Additional RUSTFLAGS to pass to the Rust compiler'
     required: false
     default: ''
+  additional-rustc-args:
+    description: 'Additional arguments to pass directly to rustc'
+    required: false
+    default: ''
   upload-artifacts:
     description: 'Upload the built artifacts as a GitHub Actions artifact'
     required: false
@@ -189,6 +193,7 @@ runs:
         fi
     
         BUILD_FEATURES_ARGS="${{ inputs.features }}"
+        ADDITIONAL_RUSTC_ARGS="${{ inputs.additional-rustc-args }}"
         NO_DEFAULT_FEATURES=""
         if [ "${{ inputs.no-default-features }}" == "true" ]; then
           NO_DEFAULT_FEATURES="--no-default-features"
@@ -245,7 +250,7 @@ runs:
     
           cd "${GITHUB_WORKSPACE}/${PGO_PROJECT_PATH}"
           echo "Flags: $RUSTFLAGS"
-          echo "$BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features \"$BUILD_FEATURES_ARGS,pgo\" $NO_DEFAULT_FEATURES"
+          echo "$BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features \"$BUILD_FEATURES_ARGS,pgo\" $NO_DEFAULT_FEATURES $ADDITIONAL_RUSTC_ARGS"
           $BUILD_CMD +nightly test --bench ${{ inputs.pgo-benchmark-name }} --release --target ${{ inputs.target }} --features "$BUILD_FEATURES_ARGS,pgo" $NO_DEFAULT_FEATURES
     
           # Check if .profraw files were created
@@ -288,8 +293,8 @@ runs:
 
         ## Build
         echo "Flags: $RUSTFLAGS"
-        echo "$BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features \"$BUILD_FEATURES_ARGS\" $NO_DEFAULT_FEATURES"
-        $BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features "$BUILD_FEATURES_ARGS" $NO_DEFAULT_FEATURES
+        echo "$BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features \"$BUILD_FEATURES_ARGS\" $NO_DEFAULT_FEATURES $ADDITIONAL_RUSTC_ARGS"
+        $BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features "$BUILD_FEATURES_ARGS" $NO_DEFAULT_FEATURES $ADDITIONAL_RUSTC_ARGS
 
         ## Copy all new files (no directories) from release dir to artifact dir
         find "${GITHUB_WORKSPACE}/${{ env.WORKSPACE_PATH }}/target/${{ inputs.target }}/release" -type f -newer "${{ env.ARTIFACT_OUT_DIR }}/build_start" -maxdepth 1 -exec cp {} "${{ env.ARTIFACT_OUT_DIR }}/" \;

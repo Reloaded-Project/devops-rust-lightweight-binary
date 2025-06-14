@@ -302,6 +302,23 @@ jobs:
           build-library: true
           size-optimized-std: true
 
+  test-custom-rustc-args:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Test Repository
+        uses: actions/checkout@v4
+        with:
+          repository: Sewer56/prs-rs
+          ref: 149060527e685360687d7332742ac016b39af8a7
+      - name: Test Custom rustc Args (Binary)
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
+        with:
+          rust-project-path: tools/cli
+          crate-name: prs-rs-cli
+          target: x86_64-unknown-linux-gnu
+          additional-rustc-args: --all-features
+          upload-artifacts: false
+
   # Can build a project in a workspace.
   # It's important caching works for both projects here; so check logs even
   # if this passes.

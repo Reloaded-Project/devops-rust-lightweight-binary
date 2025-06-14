@@ -126,6 +126,7 @@ To use this action in your own repository:
 | `pgo-benchmark-name`         | No       | `'my_benchmark'` | Benchmark name to use with PGO.                                                        |
 | `use-cross`                  | No       | `false`          | Use cross-rs for building. If false, use cargo.                                        |
 | `additional-rustflags`       | No       | `''`             | Additional RUSTFLAGS to pass to the Rust compiler                                      |
+| `additional-rustc-args`      | No       | `''`             | Additional arguments to pass directly to `rustc`                                       |
 | `use-cache`                  | No       | `true`           | Enable or disable the build cache using `Swatinem/rust-cache`.                         |
 | `upload-artifacts`           | No       | `true`           | Upload the built artifacts as a GitHub Actions artifact                                |
 | `abort-on-panic`             | No       | `true`           | Abort immediately on panic. If false, the default panic handler is used.               |
@@ -233,6 +234,17 @@ Find more examples in [the tests](./.github/workflows/test-rust-build-c-library-
     crate-name: my-crate
     target: x86_64-unknown-linux-gnu
     additional-rustflags: -C opt-level=3
+```
+
+### Custom Additional `rustc` Arguments
+
+```yaml
+- name: Build C Library
+  uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+  with:
+    crate-name: my-crate
+    target: x86_64-unknown-linux-gnu
+    additional-rustc-args: --all-features
 ```
 
 ### Building Multiple Projects
