@@ -90,6 +90,14 @@ inputs:
     description: 'Enable or disable the build cache using Swatinem/rust-cache.'
     required: false
     default: "true"
+  use-binstall:
+    description: 'Whether to use cargo-binstall in the test-and-coverage action for installing tools like tarpaulin. This parameter is passed through to the devops-rust-test-and-coverage action.'
+    required: false
+    default: "true"
+  install-binstall:
+    description: 'Whether to install cargo-binstall to make it available for the test-and-coverage action. If false, assumes it is already available in the environment.'
+    required: false
+    default: "true"
 
 runs:
   using: 'composite'
@@ -344,3 +352,5 @@ runs:
         no-default-features: ${{ inputs.no-default-features }}
         use-cross: ${{ inputs.use-cross }}
         use-tarpaulin: ${{ inputs.use-tarpaulin }}
+        use-binstall: ${{ inputs.use-binstall }}
+        install-binstall: ${{ inputs.install-binstall }}

@@ -113,29 +113,45 @@ To use this action in your own repository:
 
 ### Inputs
 
-| Input                        | Required | Default          | Description                                                                            |
-| ---------------------------- | -------- | ---------------- | -------------------------------------------------------------------------------------- |
-| `rust-project-path`          | No       | `.`              | Path to the Rust project                                                               |
-| `workspace-path`             | No       | `.`              | Workspace folder where `target` directory is. Uses `rust-project-path` if not set.     |
-| `pgo-project-path`           | No       | `.`              | Path to the Rust project used for gathering PGO data. Can be same or separate project. |
-| `crate-name`                 | Yes      |                  | Name of the Rust crate (used to determine file name)                                   |
-| `target`                     | Yes      |                  | The target platform for the Rust compiler                                              |
-| `features`                   | No       | `''`             | Comma-separated list of features to include in the build                               |
-| `no-default-features`        | No       | `false`          | Do not include default features in the build                                           |
-| `use-pgo`                    | No       | `false`          | Use Profile-Guided Optimization [PGO] to build the library.                            |
-| `pgo-benchmark-name`         | No       | `'my_benchmark'` | Benchmark name to use with PGO.                                                        |
-| `use-cross`                  | No       | `false`          | Use cross-rs for building. If false, use cargo.                                        |
-| `additional-rustflags`       | No       | `''`             | Additional RUSTFLAGS to pass to the Rust compiler                                      |
-| `additional-rustc-args`      | No       | `''`             | Additional arguments to pass directly to `rustc`                                       |
-| `use-cache`                  | No       | `true`           | Enable or disable the build cache using `Swatinem/rust-cache`.                         |
-| `upload-artifacts`           | No       | `true`           | Upload the built artifacts as a GitHub Actions artifact                                |
-| `abort-on-panic`             | No       | `true`           | Abort immediately on panic. If false, the default panic handler is used.               |
-| `build-library`              | No       | `false`          | Build a library instead of a binary.                                                   |
-| `run-tests-and-coverage`     | No       | `false`          | Run tests and coverage using the `devops-rust-test-and-coverage` action.               |
-| `upload-coverage-to-codecov` | No       | `true`           | Uploads coverage to codecov if `run-tests-and-coverage` is enabled.                    |
-| `size-optimized-std`         | No       | `false`          | Builds `std` with size optimizations, such as reduced `core::fmt` footprint.           |
-| `additional-std-features`    | No       | ``               | Specify extra `build-std` features.                                                    |
-| `use-tarpaulin`              | No       | `true`           | Use tarpaulin for code coverage. If false, code coverage will be disabled.             |
+#### Parameters Used by This Action
+
+These parameters are processed and used directly by the `rust-lightweight-binary` action:
+
+| Input                     | Required | Default          | Description                                                                            |
+| ------------------------- | -------- | ---------------- | -------------------------------------------------------------------------------------- |
+| `rust-project-path`       | No       | `.`              | Path to the Rust project                                                               |
+| `workspace-path`          | No       | `.`              | Workspace folder where `target` directory is. Uses `rust-project-path` if not set.     |
+| `pgo-project-path`        | No       | `.`              | Path to the Rust project used for gathering PGO data. Can be same or separate project. |
+| `crate-name`              | Yes      |                  | Name of the Rust crate (used to determine file name)                                   |
+| `target`                  | Yes      |                  | The target platform for the Rust compiler                                              |
+| `features`                | No       | `''`             | Comma-separated list of features to include in the build                               |
+| `no-default-features`     | No       | `false`          | Do not include default features in the build                                           |
+| `use-pgo`                 | No       | `false`          | Use Profile-Guided Optimization [PGO] to build the library.                            |
+| `pgo-benchmark-name`      | No       | `'my_benchmark'` | Benchmark name to use with PGO.                                                        |
+| `use-cross`               | No       | `false`          | Use cross-rs for building. If false, use cargo.                                        |
+| `additional-rustflags`    | No       | `''`             | Additional RUSTFLAGS to pass to the Rust compiler                                      |
+| `additional-rustc-args`   | No       | `''`             | Additional arguments to pass directly to `rustc`                                       |
+| `use-cache`               | No       | `true`           | Enable or disable the build cache using `Swatinem/rust-cache`.                         |
+| `upload-artifacts`        | No       | `true`           | Upload the built artifacts as a GitHub Actions artifact                                |
+| `abort-on-panic`          | No       | `true`           | Abort immediately on panic. If false, the default panic handler is used.               |
+| `build-library`           | No       | `false`          | Build a library instead of a binary.                                                   |
+| `run-tests-and-coverage`  | No       | `false`          | Run tests and coverage using the `devops-rust-test-and-coverage` action.               |
+| `size-optimized-std`      | No       | `false`          | Builds `std` with size optimizations, such as reduced `core::fmt` footprint.           |
+| `additional-std-features` | No       | ``               | Specify extra `build-std` features.                                                    |
+
+#### Parameters Passed Through to `devops-rust-test-and-coverage`
+
+These parameters are only used when `run-tests-and-coverage` is enabled and are passed directly to the [devops-rust-test-and-coverage][devops-test-coverage] action:
+
+| Input                        | Required | Default | Description                                                                                           |
+| ---------------------------- | -------- | ------- | ----------------------------------------------------------------------------------------------------- |
+| `upload-coverage-to-codecov` | No       | `true`  | Whether to upload coverage to Codecov                                                                 |
+| `codecov-token`              | No       |         | Codecov token for uploading coverage                                                                  |
+| `use-tarpaulin`              | No       | `true`  | Whether to use Tarpaulin for code coverage. If false, only runs tests.                                |
+| `use-binstall`               | No       | `true`  | Whether to use cargo-binstall for installing components like tarpaulin. If false, uses cargo install. |
+| `install-binstall`           | No       | `true`  | Whether to install cargo-binstall. If false, assumes it is already available in the environment.      |
+
+**Note:** The following parameters are used by both this action AND passed through to the test action: `target`, `features`, `no-default-features`, `use-cross`.
 
 ### Setting up Profile-Guided Optimization (PGO)
 
@@ -263,6 +279,7 @@ build them in a single job:
     target: x86_64-unknown-linux-gnu
     use-cache: true  # Only first build enables cache
     upload-artifacts: true
+    # install-binstall: true (default)
 
 - name: Build CLI Crate
   uses: Reloaded-Project/devops-rust-lightweight-binary@v1
@@ -271,6 +288,7 @@ build them in a single job:
     crate-name: cli-crate
     target: x86_64-unknown-linux-gnu
     use-cache: false  # Subsequent builds disable cache
+    install-binstall: false  # Avoid installing cargo-binstall again
     upload-artifacts: true
 ```
 
@@ -282,6 +300,10 @@ So you should only set `use-cache` on the first project.
 > If you are using [devops-test-coverage] action, that also creates a cache by default.
 > Be aware of this, you may want to set `use-cache` false if running tests at the end, or set
 > `use-cache` false on `devops-rust-lightweight-binary` if tests are ran first.
+>
+> Additionally, cargo-binstall will be installed by default. If you want to avoid installing
+> cargo-binstall multiple times across multiple build steps, set `install-binstall` to false
+> on subsequent steps.
 > 
 > ```yaml
 > - name: Run Tests
@@ -291,6 +313,7 @@ So you should only set `use-cache` on the first project.
 >     use-cross: ${{ matrix.use-cross }}
 >     codecov-token: ${{ secrets.CODECOV_TOKEN }}\
 >     # use-cache: true # use-cache is enabled by default
+>     # install-binstall: true # install-binstall is enabled by default
 > ```
 
 #### Parallel Builds
