@@ -353,4 +353,4 @@ runs:
         use-cross: ${{ inputs.use-cross }}
         use-tarpaulin: ${{ inputs.use-tarpaulin }}
         use-binstall: ${{ inputs.use-binstall }}
-        install-binstall: false
+        install-binstall: ${{ inputs.install-binstall }}
