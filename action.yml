@@ -230,9 +230,9 @@ runs:
         BUILD_STD_FEATURES=()
 
         if [ "${{ inputs.abort-on-panic }}" == "true" ]; then
-          export RUSTFLAGS="$RUSTFLAGS -C panic=abort"
-          BUILD_STD_ARGS="$BUILD_STD_ARGS,panic_abort"
-          BUILD_STD_FEATURES+=("panic_immediate_abort")
+          export RUSTFLAGS="$RUSTFLAGS -Zunstable-options -C panic=immediate-abort"
+          BUILD_STD_ARGS="$BUILD_STD_ARGS"
+          BUILD_STD_FEATURES+=("")
         fi
 
         if [ "${{ inputs.size-optimized-std }}" == "true" ]; then
@@ -268,7 +268,7 @@ runs:
     
           cd "${GITHUB_WORKSPACE}/${PGO_PROJECT_PATH}"
           echo "Flags: $RUSTFLAGS"
-          echo "$BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features \"$BUILD_FEATURES_ARGS,pgo\" $NO_DEFAULT_FEATURES $ADDITIONAL_RUSTC_ARGS"
+          echo "$BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features \"$BUILD_FEATURES_ARGS,pgo\" $NO_DEFAULT_FEATURES $ADDITIONAL_RUSTC_ARGS" -j1 --verbose
           $BUILD_CMD +nightly test --bench ${{ inputs.pgo-benchmark-name }} --release --target ${{ inputs.target }} --features "$BUILD_FEATURES_ARGS,pgo" $NO_DEFAULT_FEATURES
     
           # Check if .profraw files were created
