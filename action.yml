@@ -98,6 +98,10 @@ inputs:
     description: "Whether to install cargo-binstall to make it available for the test-and-coverage action. If false, assumes it is already available in the environment."
     required: false
     default: "true"
+  rust-toolchain:
+    description: "The Rust toolchain to use for building. Can be nightly or a specific nightly version (nightly-2025-09-18). Note: stable and beta are not supported due to required nightly features."
+    required: false
+    default: "nightly"
 
 runs:
   using: "composite"
@@ -106,7 +110,7 @@ runs:
       with:
         matcher: false
         cache: false
-        toolchain: nightly
+        toolchain: ${{ inputs.rust-toolchain }}
 
     - name: Determine workspace path
       shell: bash
@@ -162,7 +166,7 @@ runs:
       if: inputs.use-cache == 'true'
       uses: Swatinem/rust-cache@v2
       with:
-        key: build-${{ env.WORKSPACE_PATH }}-${{ inputs.crate-name }}-${{ inputs.target }}-${{ env.SAFE_FEATURES }}-${{ env.SAFE_ADDITIONAL_STD_FEATURES }}-${{ env.SAFE_ADDITIONAL_RUSTC_ARGS }}-${{ inputs.no-default-features }}-${{ inputs.build-library }}-${{ inputs.crate-types }}-${{ inputs.use-cross }}
+        key: build-${{ env.WORKSPACE_PATH }}-${{ inputs.crate-name }}-${{ inputs.target }}-${{ env.SAFE_FEATURES }}-${{ env.SAFE_ADDITIONAL_STD_FEATURES }}-${{ env.SAFE_ADDITIONAL_RUSTC_ARGS }}-${{ inputs.no-default-features }}-${{ inputs.build-library }}-${{ inputs.crate-types }}-${{ inputs.use-cross }}-${{ inputs.rust-toolchain }}
         cache-on-failure: true
         cache-all-crates: true
         workspaces: |
@@ -189,11 +193,11 @@ runs:
       shell: bash
       working-directory: ${{ env.WORKSPACE_PATH }}
       run: |
-        rustup target add ${{ inputs.target }}
-        rustup component add rust-src --toolchain nightly
+        rustup target add ${{ inputs.target }} --toolchain ${{ inputs.rust-toolchain }}
+        rustup component add rust-src --toolchain ${{ inputs.rust-toolchain }}
         if [ "${{ inputs.use-cross }}" != "true" ]; then
           # Install native toolchain to build with, otherwise it's provided by cross.
-          rustup toolchain install nightly-${{ inputs.target }} --force-non-host
+          rustup toolchain install ${{ inputs.rust-toolchain }}-${{ inputs.target }} --force-non-host
         fi
 
         # Install cross-rs if needed
@@ -268,8 +272,8 @@ runs:
 
           cd "${GITHUB_WORKSPACE}/${PGO_PROJECT_PATH}"
           echo "Flags: $RUSTFLAGS"
-          echo "$BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features \"$BUILD_FEATURES_ARGS,pgo\" $NO_DEFAULT_FEATURES $ADDITIONAL_RUSTC_ARGS"
-          $BUILD_CMD +nightly test --bench ${{ inputs.pgo-benchmark-name }} --release --target ${{ inputs.target }} --features "$BUILD_FEATURES_ARGS,pgo" $NO_DEFAULT_FEATURES
+          echo "$BUILD_CMD +${{ inputs.rust-toolchain }} rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features \"$BUILD_FEATURES_ARGS,pgo\" $NO_DEFAULT_FEATURES $ADDITIONAL_RUSTC_ARGS"
+          $BUILD_CMD +${{ inputs.rust-toolchain }} test --bench ${{ inputs.pgo-benchmark-name }} --release --target ${{ inputs.target }} --features "$BUILD_FEATURES_ARGS,pgo" $NO_DEFAULT_FEATURES
 
           # Check if .profraw files were created
           echo "Profiles Folder: $PGO_PROFILES_FOLDER"
@@ -311,8 +315,8 @@ runs:
 
         ## Build
         echo "Flags: $RUSTFLAGS"
-        echo "$BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features \"$BUILD_FEATURES_ARGS\" $NO_DEFAULT_FEATURES $ADDITIONAL_RUSTC_ARGS"
-        $BUILD_CMD +nightly rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features "$BUILD_FEATURES_ARGS" $NO_DEFAULT_FEATURES $ADDITIONAL_RUSTC_ARGS
+        echo "$BUILD_CMD +${{ inputs.rust-toolchain }} rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features \"$BUILD_FEATURES_ARGS\" $NO_DEFAULT_FEATURES $ADDITIONAL_RUSTC_ARGS"
+        $BUILD_CMD +${{ inputs.rust-toolchain }} rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features "$BUILD_FEATURES_ARGS" $NO_DEFAULT_FEATURES $ADDITIONAL_RUSTC_ARGS
 
         ## Copy all new files (no directories) from release dir to artifact dir
         find "${GITHUB_WORKSPACE}/${{ env.WORKSPACE_PATH }}/target/${{ inputs.target }}/release" -type f -newer "${{ env.ARTIFACT_OUT_DIR }}/build_start" -maxdepth 1 -exec cp {} "${{ env.ARTIFACT_OUT_DIR }}/" \;
@@ -342,7 +346,7 @@ runs:
       uses: Reloaded-Project/devops-rust-test-and-coverage@v1
       with:
         rust-project-path: ${{ env.WORKSPACE_PATH }}
-        rust-toolchain: nightly
+        rust-toolchain: ${{ inputs.rust-toolchain }}
         target: ${{ inputs.target }}
         install-rust-toolchain: false
         setup-rust-cache: false

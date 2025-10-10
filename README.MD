@@ -21,7 +21,7 @@ This action is used to build binaries with the following properties:
 - **Abort on Panic**: Reduces binary size. Can be disabled if needed.
 - **Profile Guided Optimization (PGO)**: Improves performance by optimizing based on usage patterns.
 - **Cross-Compilation**: Supports cross-compilation using `cross-rs`.
-- **Nightly Rust**: Uses the nightly Rust toolchain for building and running.
+- **Nightly Rust**: Uses the latest nightly Rust toolchain by default for building and running. Toolchain can be overridden via `rust-toolchain` parameter to pin to a specific nightly version.
 - **Tests and Coverage**: Optionally run tests and generate coverage reports using the `devops-rust-test-and-coverage` action.
 
 It can be used to build both binaries and C libraries.
@@ -117,27 +117,28 @@ To use this action in your own repository:
 
 These parameters are processed and used directly by the `rust-lightweight-binary` action:
 
-| Input                     | Required | Default          | Description                                                                            |
-| ------------------------- | -------- | ---------------- | -------------------------------------------------------------------------------------- |
-| `rust-project-path`       | No       | `.`              | Path to the Rust project                                                               |
-| `workspace-path`          | No       | `.`              | Workspace folder where `target` directory is. Uses `rust-project-path` if not set.     |
-| `pgo-project-path`        | No       | `.`              | Path to the Rust project used for gathering PGO data. Can be same or separate project. |
-| `crate-name`              | Yes      |                  | Name of the Rust crate (used to determine file name)                                   |
-| `target`                  | Yes      |                  | The target platform for the Rust compiler                                              |
-| `features`                | No       | `''`             | Comma-separated list of features to include in the build                               |
-| `no-default-features`     | No       | `false`          | Do not include default features in the build                                           |
-| `use-pgo`                 | No       | `false`          | Use Profile-Guided Optimization [PGO] to build the library.                            |
-| `pgo-benchmark-name`      | No       | `'my_benchmark'` | Benchmark name to use with PGO.                                                        |
-| `use-cross`               | No       | `false`          | Use cross-rs for building. If false, use cargo.                                        |
-| `additional-rustflags`    | No       | `''`             | Additional RUSTFLAGS to pass to the Rust compiler                                      |
-| `additional-rustc-args`   | No       | `''`             | Additional arguments to pass directly to `rustc`                                       |
-| `use-cache`               | No       | `true`           | Enable or disable the build cache using `Swatinem/rust-cache`.                         |
-| `upload-artifacts`        | No       | `true`           | Upload the built artifacts as a GitHub Actions artifact                                |
-| `abort-on-panic`          | No       | `true`           | Abort immediately on panic. If false, the default panic handler is used.               |
-| `build-library`           | No       | `false`          | Build a library instead of a binary.                                                   |
-| `run-tests-and-coverage`  | No       | `false`          | Run tests and coverage using the `devops-rust-test-and-coverage` action.               |
-| `size-optimized-std`      | No       | `false`          | Builds `std` with size optimizations, such as reduced `core::fmt` footprint.           |
-| `additional-std-features` | No       | ``               | Specify extra `build-std` features.                                                    |
+| Input                     | Required | Default          | Description                                                                                         |
+| ------------------------- | -------- | ---------------- | --------------------------------------------------------------------------------------------------- |
+| `rust-project-path`       | No       | `.`              | Path to the Rust project                                                                            |
+| `workspace-path`          | No       | `.`              | Workspace folder where `target` directory is. Uses `rust-project-path` if not set.                  |
+| `pgo-project-path`        | No       | `.`              | Path to the Rust project used for gathering PGO data. Can be same or separate project.              |
+| `crate-name`              | Yes      |                  | Name of the Rust crate (used to determine file name)                                                |
+| `target`                  | Yes      |                  | The target platform for the Rust compiler                                                           |
+| `features`                | No       | `''`             | Comma-separated list of features to include in the build                                            |
+| `no-default-features`     | No       | `false`          | Do not include default features in the build                                                        |
+| `use-pgo`                 | No       | `false`          | Use Profile-Guided Optimization [PGO] to build the library.                                         |
+| `pgo-benchmark-name`      | No       | `'my_benchmark'` | Benchmark name to use with PGO.                                                                     |
+| `use-cross`               | No       | `false`          | Use cross-rs for building. If false, use cargo.                                                     |
+| `additional-rustflags`    | No       | `''`             | Additional RUSTFLAGS to pass to the Rust compiler                                                   |
+| `additional-rustc-args`   | No       | `''`             | Additional arguments to pass directly to `rustc`                                                    |
+| `rust-toolchain`          | No       | `nightly`        | The Rust toolchain to use. Can be nightly or a specific nightly version (e.g., nightly-2025-09-18). |
+| `use-cache`               | No       | `true`           | Enable or disable the build cache using `Swatinem/rust-cache`.                                      |
+| `upload-artifacts`        | No       | `true`           | Upload the built artifacts as a GitHub Actions artifact                                             |
+| `abort-on-panic`          | No       | `true`           | Abort immediately on panic. If false, the default panic handler is used.                            |
+| `build-library`           | No       | `false`          | Build a library instead of a binary.                                                                |
+| `run-tests-and-coverage`  | No       | `false`          | Run tests and coverage using the `devops-rust-test-and-coverage` action.                            |
+| `size-optimized-std`      | No       | `false`          | Builds `std` with size optimizations, such as reduced `core::fmt` footprint.                        |
+| `additional-std-features` | No       | ``               | Specify extra `build-std` features.                                                                 |
 
 #### Parameters Passed Through to `devops-rust-test-and-coverage`
 
@@ -152,6 +153,8 @@ These parameters are only used when `run-tests-and-coverage` is enabled and are 
 | `install-binstall`           | No       | `true`  | Whether to install cargo-binstall. If false, assumes it is already available in the environment.      |
 
 **Note:** The following parameters are used by both this action AND passed through to the test action: `target`, `features`, `no-default-features`, `use-cross`.
+
+> **Note:** Stable and beta toolchains are not supported due to required nightly features. Only nightly and specific nightly versions (e.g., `nightly-2025-09-18`) are supported.
 
 ### Setting up Profile-Guided Optimization (PGO)
 
@@ -261,6 +264,17 @@ Find more examples in [the tests](./.github/workflows/test-rust-build-c-library-
     crate-name: my-crate
     target: x86_64-unknown-linux-gnu
     additional-rustc-args: --all-features
+```
+
+### Pin to Specific Nightly Version
+
+```yaml
+- name: Build C Library with Specific Nightly
+  uses: Reloaded-Project/devops-rust-lightweight-binary@v1
+  with:
+    crate-name: my-crate
+    target: x86_64-unknown-linux-gnu
+    rust-toolchain: nightly-2025-09-18
 ```
 
 ### Building Multiple Projects
