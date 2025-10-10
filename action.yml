@@ -102,6 +102,18 @@ inputs:
     description: "The Rust toolchain to use for building. Can be nightly or a specific nightly version (nightly-2025-09-18). Note: stable and beta are not supported due to required nightly features."
     required: false
     default: "nightly"
+  additional-test-args:
+    description: "Additional arguments passed directly to the cargo test command (e.g., '--ignored --test-threads=1 --lib')"
+    required: false
+    default: ""
+  codecov-flags:
+    description: "Flags to pass to Codecov for organizing coverage reports"
+    required: false
+    default: "unittests"
+  codecov-name:
+    description: "Custom defined name for the coverage upload"
+    required: false
+    default: "codecov-umbrella"
 
 runs:
   using: "composite"
@@ -358,3 +370,6 @@ runs:
         use-tarpaulin: ${{ inputs.use-tarpaulin }}
         use-binstall: ${{ inputs.use-binstall }}
         install-binstall: ${{ inputs.install-binstall }}
+        additional-test-args: ${{ inputs.additional-test-args }}
+        codecov-flags: ${{ inputs.codecov-flags }}
+        codecov-name: ${{ inputs.codecov-name }}

@@ -144,13 +144,16 @@ These parameters are processed and used directly by the `rust-lightweight-binary
 
 These parameters are only used when `run-tests-and-coverage` is enabled and are passed directly to the [devops-rust-test-and-coverage][devops-test-coverage] action:
 
-| Input                        | Required | Default | Description                                                                                           |
-| ---------------------------- | -------- | ------- | ----------------------------------------------------------------------------------------------------- |
-| `upload-coverage-to-codecov` | No       | `true`  | Whether to upload coverage to Codecov                                                                 |
-| `codecov-token`              | No       |         | Codecov token for uploading coverage                                                                  |
-| `use-tarpaulin`              | No       | `true`  | Whether to use Tarpaulin for code coverage. If false, only runs tests.                                |
-| `use-binstall`               | No       | `true`  | Whether to use cargo-binstall for installing components like tarpaulin. If false, uses cargo install. |
-| `install-binstall`           | No       | `true`  | Whether to install cargo-binstall. If false, assumes it is already available in the environment.      |
+| Input                        | Required | Default              | Description                                                                                           |
+| ---------------------------- | -------- | -------------------- | ----------------------------------------------------------------------------------------------------- |
+| `upload-coverage-to-codecov` | No       | `true`               | Whether to upload coverage to Codecov                                                                 |
+| `codecov-token`              | No       |                      | Codecov token for uploading coverage                                                                  |
+| `use-tarpaulin`              | No       | `true`               | Whether to use Tarpaulin for code coverage. If false, only runs tests.                                |
+| `use-binstall`               | No       | `true`               | Whether to use cargo-binstall for installing components like tarpaulin. If false, uses cargo install. |
+| `install-binstall`           | No       | `true`               | Whether to install cargo-binstall. If false, assumes it is already available in the environment.      |
+| `additional-test-args`       | No       | `''`                 | Additional arguments passed directly to the cargo test command.                                       |
+| `codecov-flags`              | No       | `'unittests'`        | Flags to pass to Codecov for organizing coverage reports.                                             |
+| `codecov-name`               | No       | `'codecov-umbrella'` | Custom defined name for the coverage upload.                                                          |
 
 **Note:** The following parameters are used by both this action AND passed through to the test action: `target`, `features`, `no-default-features`, `use-cross`.
 
