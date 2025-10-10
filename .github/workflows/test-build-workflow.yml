@@ -65,7 +65,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: Sewer56/prs-rs
-          ref: 0577f9d0ea0db289984badb878ff3230af1c0c04
+          ref: 364e3cdba8b04c07e49b7aa7707ea889938b9ec7
       - name: Test Binary Build
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -83,7 +83,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: Sewer56/prs-rs
-          ref: 0577f9d0ea0db289984badb878ff3230af1c0c04
+          ref: 364e3cdba8b04c07e49b7aa7707ea889938b9ec7
       - name: Test Android Armv7 Build
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -149,7 +149,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: Sewer56/prs-rs
-          ref: 0577f9d0ea0db289984badb878ff3230af1c0c04
+          ref: 364e3cdba8b04c07e49b7aa7707ea889938b9ec7
       - name: Test Library Build
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -172,7 +172,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: Sewer56/prs-rs
-          ref: 0577f9d0ea0db289984badb878ff3230af1c0c04
+          ref: 364e3cdba8b04c07e49b7aa7707ea889938b9ec7
       - name: Test PGO with Cross-Compilation (Binary)
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -202,7 +202,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: Sewer56/prs-rs
-          ref: 0577f9d0ea0db289984badb878ff3230af1c0c04
+          ref: 364e3cdba8b04c07e49b7aa7707ea889938b9ec7
       - name: Test Library Feature Build
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -219,7 +219,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: Sewer56/prs-rs
-          ref: 0577f9d0ea0db289984badb878ff3230af1c0c04
+          ref: 364e3cdba8b04c07e49b7aa7707ea889938b9ec7
       - name: Test Library No Default Features
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -237,7 +237,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: Sewer56/prs-rs
-          ref: 0577f9d0ea0db289984badb878ff3230af1c0c04
+          ref: 364e3cdba8b04c07e49b7aa7707ea889938b9ec7
       - name: Test Binary PGO with Library
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -256,7 +256,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: Sewer56/prs-rs
-          ref: 0577f9d0ea0db289984badb878ff3230af1c0c04
+          ref: 364e3cdba8b04c07e49b7aa7707ea889938b9ec7
       - name: Test Library PGO
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -274,7 +274,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: Sewer56/prs-rs
-          ref: 0577f9d0ea0db289984badb878ff3230af1c0c04
+          ref: 364e3cdba8b04c07e49b7aa7707ea889938b9ec7
       - name: Test Custom RUSTFLAGS (Binary)
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -299,7 +299,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: Sewer56/prs-rs
-          ref: 0577f9d0ea0db289984badb878ff3230af1c0c04
+          ref: 364e3cdba8b04c07e49b7aa7707ea889938b9ec7
       - name: Test Custom RUSTFLAGS (Binary)
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -326,7 +326,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: Sewer56/prs-rs
-          ref: 0577f9d0ea0db289984badb878ff3230af1c0c04
+          ref: 364e3cdba8b04c07e49b7aa7707ea889938b9ec7
       - name: Test Custom rustc Args (Binary)
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
         with:
@@ -382,7 +382,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: Sewer56/prs-rs
-          ref: 0577f9d0ea0db289984badb878ff3230af1c0c04
+          ref: 364e3cdba8b04c07e49b7aa7707ea889938b9ec7
 
       - name: Test Artifact Upload (Binary)
         uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
