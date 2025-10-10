@@ -5,7 +5,6 @@ on:
     - cron: "0 0 * * *" # Run daily at midnight
   workflow_dispatch:
   push:
-    branches: [master]
     tags:
       - "v1"
       - "v1-test"
@@ -13,7 +12,7 @@ on:
       - "action.yml"
       - ".github/workflows/test-build-workflow.yml"
   pull_request:
-    branches: [master]
+    branches: [v1-master]
     paths:
       - "action.yml"
       - ".github/workflows/test-build-workflow.yml"
