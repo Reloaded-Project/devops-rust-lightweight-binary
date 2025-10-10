@@ -257,10 +257,6 @@ runs:
           done
         fi
 
-        if [ ${#BUILD_STD_FEATURES[@]} -gt 0 ]; then
-          BUILD_STD_ARGS="$BUILD_STD_ARGS -Z build-std-features=$(IFS=, ; echo "${BUILD_STD_FEATURES[*]}")"
-        fi
-
         # Handle PGO
         if [ "${{ inputs.use-pgo }}" == "true" ]; then
           rustup component add llvm-tools-preview
@@ -317,8 +313,45 @@ runs:
 
         # Add panic configuration only for final build
         if [ "${{ inputs.abort-on-panic }}" == "true" ]; then
-          export RUSTFLAGS="$RUSTFLAGS -Zunstable-options -Cpanic=immediate-abort"
-          BUILD_STD_ARGS="$BUILD_STD_ARGS"
+          # Get Rust version to determine panic strategy
+          RUST_VERSION=$(rustc +${{ inputs.rust-toolchain }} --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          echo "Detected Rust version: $RUST_VERSION"
+          
+          # Function to compare version numbers (returns 0 if $1 >= $2)
+          version_ge() {
+            local v1=$1 v2=$2
+            # Split versions into arrays
+            IFS='.' read -ra v1_parts <<< "$v1"
+            IFS='.' read -ra v2_parts <<< "$v2"
+            
+            # Compare major, minor, patch versions
+            for i in {0..2}; do
+              local part1=${v1_parts[i]:-0}
+              local part2=${v2_parts[i]:-0}
+              if [ "$part1" -gt "$part2" ]; then
+                return 0  # v1 > v2
+              elif [ "$part1" -lt "$part2" ]; then
+                return 1  # v1 < v2
+              fi
+            done
+            return 0  # v1 == v2
+          }
+          
+          if version_ge "$RUST_VERSION" "1.92.0"; then
+            # Rust version >= 1.92.0, use immediate-abort
+            echo "Using -Cpanic=immediate-abort for Rust $RUST_VERSION"
+            export RUSTFLAGS="$RUSTFLAGS -Zunstable-options -Cpanic=immediate-abort"
+          else
+            # Rust version < 1.92.0, use panic_immediate_abort feature and -C panic=abort
+            echo "Using panic_immediate_abort feature and -C panic=abort for Rust $RUST_VERSION"
+            export RUSTFLAGS="$RUSTFLAGS -C panic=abort"
+            BUILD_STD_ARGS="$BUILD_STD_ARGS,panic_abort"
+            BUILD_STD_FEATURES+=("panic_immediate_abort")
+          fi
+        fi
+
+        if [ ${#BUILD_STD_FEATURES[@]} -gt 0 ]; then
+          BUILD_STD_ARGS="$BUILD_STD_ARGS -Z build-std-features=$(IFS=, ; echo "${BUILD_STD_FEATURES[*]}")"
         fi
 
         ## Create Reference File for Date Comparison
