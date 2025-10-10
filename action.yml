@@ -272,7 +272,7 @@ runs:
 
           cd "${GITHUB_WORKSPACE}/${PGO_PROJECT_PATH}"
           echo "Flags: $RUSTFLAGS"
-          echo "$BUILD_CMD +${{ inputs.rust-toolchain }} rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features \"$BUILD_FEATURES_ARGS,pgo\" $NO_DEFAULT_FEATURES $ADDITIONAL_RUSTC_ARGS"
+          echo "$BUILD_CMD +${{ inputs.rust-toolchain }} test --bench ${{ inputs.pgo-benchmark-name }} --release --target ${{ inputs.target }} --features \"$BUILD_FEATURES_ARGS,pgo\" $NO_DEFAULT_FEATURES"
           $BUILD_CMD +${{ inputs.rust-toolchain }} test --bench ${{ inputs.pgo-benchmark-name }} --release --target ${{ inputs.target }} --features "$BUILD_FEATURES_ARGS,pgo" $NO_DEFAULT_FEATURES
 
           # Check if .profraw files were created
