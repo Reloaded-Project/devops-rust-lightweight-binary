@@ -245,12 +245,6 @@ runs:
         BUILD_STD_ARGS="-Z build-std=std"
         BUILD_STD_FEATURES=()
 
-        if [ "${{ inputs.abort-on-panic }}" == "true" ]; then
-          export RUSTFLAGS="$RUSTFLAGS -C panic=abort"
-          BUILD_STD_ARGS="$BUILD_STD_ARGS,panic_abort"
-          BUILD_STD_FEATURES+=("panic_immediate_abort")
-        fi
-
         if [ "${{ inputs.size-optimized-std }}" == "true" ]; then
           BUILD_STD_FEATURES+=("optimize_for_size")
         fi
@@ -320,6 +314,12 @@ runs:
 
         # Build the final project
         cd "${GITHUB_WORKSPACE}/${{ inputs.rust-project-path }}"
+
+        # Add panic configuration only for final build
+        if [ "${{ inputs.abort-on-panic }}" == "true" ]; then
+          export RUSTFLAGS="$RUSTFLAGS -Zunstable-options -Cpanic=immediate-abort"
+          BUILD_STD_ARGS="$BUILD_STD_ARGS"
+        fi
 
         ## Create Reference File for Date Comparison
         mkdir -p "${{ env.ARTIFACT_OUT_DIR }}"
