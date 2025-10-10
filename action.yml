@@ -268,8 +268,8 @@ runs:
     
           cd "${GITHUB_WORKSPACE}/${PGO_PROJECT_PATH}"
           echo "Flags: $RUSTFLAGS"
-          echo "$BUILD_CMD +nightly test --bench ${{ inputs.pgo-benchmark-name }} --release --target ${{ inputs.target }} --features \"$BUILD_FEATURES_ARGS,pgo\" $NO_DEFAULT_FEATURES -j1 --verbose"
-          $BUILD_CMD +nightly test --bench ${{ inputs.pgo-benchmark-name }} --release --target ${{ inputs.target }} --features "$BUILD_FEATURES_ARGS,pgo" $NO_DEFAULT_FEATURES -j1 --verbose
+          echo "$BUILD_CMD +nightly test --bench ${{ inputs.pgo-benchmark-name }} --release --target ${{ inputs.target }} --features \"$BUILD_FEATURES_ARGS,pgo\" $NO_DEFAULT_FEATURES -Zbuild-std=std -Zbuild-std-features=\"\" -j1 --verbose"
+          $BUILD_CMD +nightly test --bench ${{ inputs.pgo-benchmark-name }} --release --target ${{ inputs.target }} --features "$BUILD_FEATURES_ARGS,pgo" $NO_DEFAULT_FEATURES -Zbuild-std=std -Zbuild-std-features="" -j1 --verbose
     
           # Check if .profraw files were created
           echo "Profiles Folder: $PGO_PROFILES_FOLDER"
