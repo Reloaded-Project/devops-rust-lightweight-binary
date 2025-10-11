@@ -71,12 +71,12 @@ test-binary-build:
         #  use-pgo: false # no native runner
         #  use-cross: false
         #  use-tarpaulin: true
-        - os: macos-13 # x86
+        - os: macos-15-intel # x86
           target: x86_64-apple-darwin
           use-pgo: true
           use-cross: false
           use-tarpaulin: true
-        - os: macos-14 # M1
+        - os: macos-latest # M1
           target: aarch64-apple-darwin
           use-pgo: true
           use-cross: false
