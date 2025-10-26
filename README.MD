@@ -152,6 +152,7 @@ These parameters are only used when `run-tests-and-coverage` is enabled and are 
 | `use-binstall`               | No       | `true`               | Whether to use cargo-binstall for installing components like tarpaulin. If false, uses cargo install. |
 | `install-binstall`           | No       | `true`               | Whether to install cargo-binstall. If false, assumes it is already available in the environment.      |
 | `additional-test-args`       | No       | `''`                 | Additional arguments passed directly to the cargo test command.                                       |
+| `additional-tarpaulin-args`  | No       | `''`                 | Additional arguments passed directly to the cargo tarpaulin command.                                 |
 | `codecov-flags`              | No       | `'unittests'`        | Flags to pass to Codecov for organizing coverage reports.                                             |
 | `codecov-name`               | No       | `'codecov-umbrella'` | Custom defined name for the coverage upload.                                                          |
 

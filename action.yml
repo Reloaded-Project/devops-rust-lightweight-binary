@@ -114,6 +114,10 @@ inputs:
     description: "Custom defined name for the coverage upload"
     required: false
     default: "codecov-umbrella"
+  additional-tarpaulin-args:
+    description: "Additional arguments to pass to the cargo tarpaulin command"
+    required: false
+    default: ""
 
 runs:
   using: "composite"
@@ -406,3 +410,4 @@ runs:
         additional-test-args: ${{ inputs.additional-test-args }}
         codecov-flags: ${{ inputs.codecov-flags }}
         codecov-name: ${{ inputs.codecov-name }}
+        additional-tarpaulin-args: ${{ inputs.additional-tarpaulin-args }}
