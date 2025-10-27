@@ -376,7 +376,7 @@ runs:
 
     - name: Upload binary artifacts
       if: inputs.upload-artifacts == 'true' && inputs.build-library != 'true'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: ${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}
         path: |
@@ -385,7 +385,7 @@ runs:
 
     - name: Upload library artifacts
       if: inputs.upload-artifacts == 'true' && inputs.build-library == 'true'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: C-Library-${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}
         path: ${{ env.ARTIFACT_OUT_DIR }}
