@@ -391,7 +391,7 @@ jobs:
           target: x86_64-unknown-linux-gnu
 
       - name: Download Binary Artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: prs-rs-cli-x86_64-unknown-linux-gnu-
 
@@ -411,7 +411,7 @@ jobs:
           build-library: true
 
       - name: Download Library Artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: C-Library-prs-rs-x86_64-unknown-linux-gnu-
 
