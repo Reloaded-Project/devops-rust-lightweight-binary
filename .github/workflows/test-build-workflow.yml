@@ -374,55 +374,6 @@ jobs:
           target: x86_64-unknown-linux-gnu
           upload-artifacts: true
 
-  test-artifact-upload:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Test Repository
-        uses: actions/checkout@v6
-        with:
-          repository: Sewer56/prs-rs
-          ref: 149060527e685360687d7332742ac016b39af8a7
-
-      - name: Test Artifact Upload (Binary)
-        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
-        with:
-          rust-project-path: tools/cli
-          crate-name: prs-rs-cli
-          target: x86_64-unknown-linux-gnu
-
-      - name: Download Binary Artifact
-        uses: actions/download-artifact@v6
-        with:
-          name: prs-rs-cli-x86_64-unknown-linux-gnu-
-
-      - name: Assert Binary Artifact
-        shell: bash
-        run: |
-          if [ ! -f prs-rs-cli ]; then
-            echo "Binary artifact not found"
-            exit 1
-          fi
-
-      - name: Test Artifact Upload (Library)
-        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
-        with:
-          crate-name: prs-rs
-          target: x86_64-unknown-linux-gnu
-          build-library: true
-
-      - name: Download Library Artifact
-        uses: actions/download-artifact@v6
-        with:
-          name: C-Library-prs-rs-x86_64-unknown-linux-gnu-
-
-      - name: Assert Library Artifact
-        shell: bash
-        run: |
-          if [ ! -f libprs_rs.a ] || [ ! -f libprs_rs.so ]; then
-            echo "Library artifacts not found"
-            exit 1
-          fi
-
   test-specific-nightly:
     runs-on: ubuntu-latest
     steps:

@@ -1,0 +1,302 @@
+name: Test Symbols Separate
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Run daily at midnight
+  workflow_dispatch:
+  push:
+    tags:
+      - "v1"
+      - "v1-test"
+    paths:
+      - "action.yml"
+      - ".github/workflows/test-symbols-separate.yml"
+  pull_request:
+    branches: [v1-master]
+    paths:
+      - "action.yml"
+      - ".github/workflows/test-symbols-separate.yml"
+
+jobs:
+  # Test that symbols are uploaded separately by default (binary)
+  test-binary-separate:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: aarch64-apple-darwin
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout Test Repository
+        uses: actions/checkout@v6
+        with:
+          repository: Sewer56/prs-rs
+          ref: 039d687e737c40ab7f6deb2c2489a56e105e8082
+
+      - name: Build Binary (default upload-symbols-separately=true)
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
+        with:
+          rust-project-path: src/cli
+          crate-name: prs-rs-cli
+          target: ${{ matrix.target }}
+          workspace-path: src
+
+      - name: Download Main Binary Artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: prs-rs-cli-${{ matrix.target }}-
+          path: main-artifact
+
+      - name: Assert Main Artifact Has Binary But No Symbols
+        shell: pwsh
+        run: |
+          $os = "${{ matrix.os }}"
+          $artifactDir = "main-artifact"
+
+          if ($os -match "windows") {
+            # Windows: expect prs-rs-cli.exe but NO pdb
+            if (-not (Test-Path "$artifactDir/prs-rs-cli.exe" -PathType Leaf)) {
+              Write-Error "Expected prs-rs-cli.exe but not found"
+              exit 1
+            }
+            Write-Host "Found: prs-rs-cli.exe"
+            
+            if (Test-Path "$artifactDir/prs_rs_cli.pdb" -PathType Leaf) {
+              Write-Error "prs_rs_cli.pdb should NOT be in main artifact (separate mode)"
+              exit 1
+            }
+            Write-Host "Verified: No prs_rs_cli.pdb in main artifact"
+          }
+          elseif ($os -match "ubuntu") {
+            # Linux: expect prs-rs-cli binary but NO dwp
+            if (-not (Test-Path "$artifactDir/prs-rs-cli" -PathType Leaf)) {
+              Write-Error "Expected prs-rs-cli but not found"
+              exit 1
+            }
+            Write-Host "Found: prs-rs-cli"
+            
+            if (Test-Path "$artifactDir/prs-rs-cli.dwp" -PathType Leaf) {
+              Write-Error "prs-rs-cli.dwp should NOT be in main artifact (separate mode)"
+              exit 1
+            }
+            Write-Host "Verified: No prs-rs-cli.dwp in main artifact"
+          }
+          elseif ($os -match "macos") {
+            # macOS: expect prs-rs-cli binary but NO dSYM directory
+            if (-not (Test-Path "$artifactDir/prs-rs-cli" -PathType Leaf)) {
+              Write-Error "Expected prs-rs-cli but not found"
+              exit 1
+            }
+            Write-Host "Found: prs-rs-cli"
+            
+            if (Test-Path "$artifactDir/prs-rs-cli.dSYM" -PathType Container) {
+              Write-Error "prs-rs-cli.dSYM should NOT be in main artifact (separate mode)"
+              exit 1
+            }
+            Write-Host "Verified: No prs-rs-cli.dSYM in main artifact"
+          }
+
+      - name: Download Symbols Artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: prs-rs-cli-${{ matrix.target }}-.symbols
+          path: symbols-artifact
+
+      - name: Assert Symbols Artifact Has Symbols But No Binary
+        shell: pwsh
+        run: |
+          $os = "${{ matrix.os }}"
+          $artifactDir = "symbols-artifact"
+
+          if ($os -match "windows") {
+            # Windows: expect prs_rs_cli.pdb but NO exe
+            if (-not (Test-Path "$artifactDir/prs_rs_cli.pdb" -PathType Leaf)) {
+              Write-Error "Expected prs_rs_cli.pdb in symbols artifact but not found"
+              exit 1
+            }
+            Write-Host "Found in symbols artifact: prs_rs_cli.pdb"
+            
+            if (Test-Path "$artifactDir/prs-rs-cli.exe" -PathType Leaf) {
+              Write-Error "prs-rs-cli.exe should NOT be in symbols artifact"
+              exit 1
+            }
+          }
+          elseif ($os -match "ubuntu") {
+            # Linux: expect prs-rs-cli.dwp but NO binary
+            if (-not (Test-Path "$artifactDir/prs-rs-cli.dwp" -PathType Leaf)) {
+              Write-Error "Expected prs-rs-cli.dwp in symbols artifact but not found"
+              exit 1
+            }
+            Write-Host "Found in symbols artifact: prs-rs-cli.dwp"
+            
+            if (Test-Path "$artifactDir/prs-rs-cli" -PathType Leaf) {
+              Write-Error "prs-rs-cli should NOT be in symbols artifact"
+              exit 1
+            }
+          }
+          elseif ($os -match "macos") {
+            # macOS: expect prs-rs-cli.dSYM directory but NO binary
+            if (-not (Test-Path "$artifactDir/prs-rs-cli.dSYM" -PathType Container)) {
+              Write-Error "Expected prs-rs-cli.dSYM in symbols artifact but not found"
+              exit 1
+            }
+            Write-Host "Found in symbols artifact: prs-rs-cli.dSYM/"
+            
+            if (Test-Path "$artifactDir/prs-rs-cli" -PathType Leaf) {
+              Write-Error "prs-rs-cli should NOT be in symbols artifact"
+              exit 1
+            }
+          }
+
+  # Test that symbols are uploaded separately by default (library)
+  test-library-separate:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: aarch64-apple-darwin
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout Test Repository
+        uses: actions/checkout@v6
+        with:
+          repository: Sewer56/prs-rs
+          ref: 039d687e737c40ab7f6deb2c2489a56e105e8082
+
+      - name: Build Library (default upload-symbols-separately=true)
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
+        with:
+          rust-project-path: src/prs-rs
+          crate-name: prs-rs
+          target: ${{ matrix.target }}
+          workspace-path: src
+          build-library: true
+
+      - name: Download Main Library Artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: C-Library-prs-rs-${{ matrix.target }}-
+          path: main-artifact
+
+      - name: Assert Main Artifact Has Library But No Symbols
+        shell: pwsh
+        run: |
+          $os = "${{ matrix.os }}"
+          $artifactDir = "main-artifact"
+
+          if ($os -match "windows") {
+            # Windows: expect library files but NO pdb
+            foreach ($file in @("prs_rs.dll", "prs_rs.dll.lib", "prs_rs.lib")) {
+              if (-not (Test-Path "$artifactDir/$file" -PathType Leaf)) {
+                Write-Error "Expected $file but not found"
+                exit 1
+              }
+              Write-Host "Found: $file"
+            }
+            
+            if (Test-Path "$artifactDir/prs_rs.pdb" -PathType Leaf) {
+              Write-Error "prs_rs.pdb should NOT be in main artifact (separate mode)"
+              exit 1
+            }
+            Write-Host "Verified: No prs_rs.pdb in main artifact"
+          }
+          elseif ($os -match "ubuntu") {
+            # Linux: expect library files but NO dwp
+            foreach ($file in @("libprs_rs.so", "libprs_rs.a")) {
+              if (-not (Test-Path "$artifactDir/$file" -PathType Leaf)) {
+                Write-Error "Expected $file but not found"
+                exit 1
+              }
+              Write-Host "Found: $file"
+            }
+            
+            if (Test-Path "$artifactDir/libprs_rs.so.dwp" -PathType Leaf) {
+              Write-Error "libprs_rs.so.dwp should NOT be in main artifact (separate mode)"
+              exit 1
+            }
+            Write-Host "Verified: No libprs_rs.so.dwp in main artifact"
+          }
+          elseif ($os -match "macos") {
+            # macOS: expect library files but NO dSYM directory
+            foreach ($file in @("libprs_rs.dylib", "libprs_rs.a")) {
+              if (-not (Test-Path "$artifactDir/$file" -PathType Leaf)) {
+                Write-Error "Expected $file but not found"
+                exit 1
+              }
+              Write-Host "Found: $file"
+            }
+            
+            if (Test-Path "$artifactDir/libprs_rs.dylib.dSYM" -PathType Container) {
+              Write-Error "libprs_rs.dylib.dSYM should NOT be in main artifact (separate mode)"
+              exit 1
+            }
+            Write-Host "Verified: No libprs_rs.dylib.dSYM in main artifact"
+          }
+
+      - name: Download Symbols Artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: C-Library-prs-rs-${{ matrix.target }}-.symbols
+          path: symbols-artifact
+
+      - name: Assert Symbols Artifact Has Symbols But No Library
+        shell: pwsh
+        run: |
+          $os = "${{ matrix.os }}"
+          $artifactDir = "symbols-artifact"
+
+          if ($os -match "windows") {
+            # Windows: expect prs_rs.pdb but NO library files
+            if (-not (Test-Path "$artifactDir/prs_rs.pdb" -PathType Leaf)) {
+              Write-Error "Expected prs_rs.pdb in symbols artifact but not found"
+              exit 1
+            }
+            Write-Host "Found in symbols artifact: prs_rs.pdb"
+            
+            foreach ($file in @("prs_rs.dll", "prs_rs.lib")) {
+              if (Test-Path "$artifactDir/$file" -PathType Leaf) {
+                Write-Error "$file should NOT be in symbols artifact"
+                exit 1
+              }
+            }
+          }
+          elseif ($os -match "ubuntu") {
+            # Linux: expect libprs_rs.so.dwp but NO library files
+            if (-not (Test-Path "$artifactDir/libprs_rs.so.dwp" -PathType Leaf)) {
+              Write-Error "Expected libprs_rs.so.dwp in symbols artifact but not found"
+              exit 1
+            }
+            Write-Host "Found in symbols artifact: libprs_rs.so.dwp"
+            
+            foreach ($file in @("libprs_rs.so", "libprs_rs.a")) {
+              if (Test-Path "$artifactDir/$file" -PathType Leaf) {
+                Write-Error "$file should NOT be in symbols artifact"
+                exit 1
+              }
+            }
+          }
+          elseif ($os -match "macos") {
+            # macOS: expect libprs_rs.dylib.dSYM directory but NO library files
+            if (-not (Test-Path "$artifactDir/libprs_rs.dylib.dSYM" -PathType Container)) {
+              Write-Error "Expected libprs_rs.dylib.dSYM in symbols artifact but not found"
+              exit 1
+            }
+            Write-Host "Found in symbols artifact: libprs_rs.dylib.dSYM/"
+            
+            foreach ($file in @("libprs_rs.dylib", "libprs_rs.a")) {
+              if (Test-Path "$artifactDir/$file" -PathType Leaf) {
+                Write-Error "$file should NOT be in symbols artifact"
+                exit 1
+              }
+            }
+          }
