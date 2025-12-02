@@ -245,7 +245,7 @@ runs:
 
         # Emit deprecation warning when crate-name is used for artifact naming (without artifact-prefix)
         if [ -n "${{ inputs.crate-name }}" ] && [ -z "${{ inputs.artifact-prefix }}" ]; then
-          echo "::warning::Using 'crate-name' for artifact naming is deprecated. Please use 'artifact-prefix' instead. See documentation for migration guide."
+          echo "::warning::Using 'crate-name' for artifact naming is deprecated. Please use 'artifact-prefix' instead. See https://github.com/Reloaded-Project/devops-rust-lightweight-binary for migration guide."
         fi
 
         # Build features argument conditionally to avoid passing empty --features ""
@@ -275,7 +275,7 @@ runs:
       uses: Swatinem/rust-cache@v2
       with:
         key:
-          build-${{ env.WORKSPACE_PATH }}-${{ inputs.crate-name || 'default' }}-${{ inputs.target }}-${{
+          build-${{ env.WORKSPACE_PATH }}-${{ inputs.artifact-prefix || 'default' }}-${{ inputs.target }}-${{
           env.SAFE_FEATURES }}-${{ env.SAFE_ADDITIONAL_STD_FEATURES }}-${{ env.SAFE_ADDITIONAL_RUSTC_ARGS }}-${{
           inputs.no-default-features }}-${{ inputs.build-library }}-${{ inputs.crate-types }}-${{ inputs.use-cross
           }}-${{ inputs.rust-toolchain }}

@@ -77,15 +77,16 @@ To use this action in your own repository:
 
 #### Commonly Used
 
-| Input                    | Required | Default | Description                                                                          |
-| ------------------------ | -------- | ------- | ------------------------------------------------------------------------------------ |
-| `rust-project-path`      | No       | `.`     | Path to the Rust project                                                             |
-| `workspace-path`         | No       | `.`     | Workspace folder where `target` directory is. Uses `rust-project-path` if not set.   |
-| `build-library`          | No       | `false` | Build a library instead of a binary.                                                 |
-| `target`                 | Yes      |         | The target platform for the Rust compiler                                            |
-| `features`               | No       | `''`    | Comma-separated list of features to include in the build                             |
-| `run-tests-and-coverage` | No       | `false` | Run tests and coverage using the `devops-rust-test-and-coverage` action.             |
-| `use-cache`              | No       | `true`  | Enable or disable the build cache using `Swatinem/rust-cache`.                       |
+| Input                    | Required | Default | Description                                                                                                                                    |
+| ------------------------ | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `rust-project-path`      | No       | `.`     | Path to the Rust project                                                                                                                       |
+| `workspace-path`         | No       | `.`     | Workspace folder where `target` directory is. Uses `rust-project-path` if not set.                                                             |
+| `build-library`          | No       | `false` | Build a library instead of a binary.                                                                                                           |
+| `target`                 | Yes      |         | The target platform for the Rust compiler                                                                                                      |
+| `features`               | No       | `''`    | Comma-separated list of features to include in the build                                                                                       |
+| `artifact-prefix`        | No       | `''`    | Prefix for artifact names. Combined with target/features to form final name (e.g., `MyApp` -> `MyApp-linux-x64`). If empty, no prefix is used. |
+| `run-tests-and-coverage` | No       | `false` | Run tests and coverage using the `devops-rust-test-and-coverage` action.                                                                       |
+| `use-cache`              | No       | `true`  | Enable or disable the build cache using `Swatinem/rust-cache`.                                                                                 |
 
 #### Build Configuration
 
@@ -107,12 +108,11 @@ To use this action in your own repository:
 
 #### Artifact & Output Settings
 
-| Input                       | Required | Default | Description                                                                                                                                    |
-| --------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `upload-artifacts`          | No       | `true`  | Upload the built artifacts as a GitHub Actions artifact                                                                                        |
-| `upload-symbols-separately` | No       | `true`  | Upload debug symbol files (.pdb, .dwp, .dSYM) as separate artifacts instead of bundling with main artifacts                                    |
-| `use-friendly-target-names` | No       | `true`  | Transform target triples to user-friendly names (e.g., `x86_64-unknown-linux-gnu` -> `linux-x64`) in artifact names.                           |
-| `artifact-prefix`           | No       | `''`    | Prefix for artifact names. Combined with target/features to form final name (e.g., `MyApp` -> `MyApp-linux-x64`). If empty, no prefix is used. |
+| Input                       | Required | Default | Description                                                                                                          |
+| --------------------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
+| `upload-artifacts`          | No       | `true`  | Upload the built artifacts as a GitHub Actions artifact                                                              |
+| `upload-symbols-separately` | No       | `true`  | Upload debug symbol files (.pdb, .dwp, .dSYM) as separate artifacts instead of bundling with main artifacts          |
+| `use-friendly-target-names` | No       | `true`  | Transform target triples to user-friendly names (e.g., `x86_64-unknown-linux-gnu` -> `linux-x64`) in artifact names. |
 
 #### Advanced / Low-Level
 
@@ -314,9 +314,9 @@ To access the artifacts:
 
 ### `crate-name` Parameter
 
-| Input        | Required | Default | Description                                                                   |
-| ------------ | -------- | ------- | ----------------------------------------------------------------------------- |
-| `crate-name` | No       | `''`    | Name of the Rust crate/package. Used for cache key and artifact directory.   |
+| Input        | Required | Default | Description                                                                |
+| ------------ | -------- | ------- | -------------------------------------------------------------------------- |
+| `crate-name` | No       | `''`    | Name of the Rust crate/package. Used for cache key and artifact directory. |
 
 The `crate-name` parameter is still used for:
 - **Cache key**: When provided, it helps create unique cache keys for your builds
