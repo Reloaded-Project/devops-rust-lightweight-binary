@@ -260,35 +260,33 @@ So you should only set `use-cache` on the first project.
 
 #### Parallel Builds
 
-If you are building multiple projects with either different compiler settings, features, or targets, 
-build them in separate jobs:
+If you are building the same crate with different compiler settings, features, or targets, 
+build them in separate jobs to avoid cache conflicts:
 
 ```yaml
 jobs:
-  build-api:
+  build-standard:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: Reloaded-Project/devops-rust-lightweight-binary@v1
         with:
-          rust-project-path: projects/api-crate
-          crate-name: api-crate
+          crate-name: my-crate
           target: x86_64-unknown-linux-gnu
-          use-cache: true # this is the default
-          upload-artifacts: true
+          features: ""
 
-  build-cli:
+  build-with-simd:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: Reloaded-Project/devops-rust-lightweight-binary@v1
         with:
-          rust-project-path: projects/cli-crate
-          crate-name: cli-crate
+          crate-name: my-crate
           target: x86_64-unknown-linux-gnu
-          use-cache: true # this is the default
-          upload-artifacts: true
+          features: "simd,avx2"
 ```
+
+Building these in a single job would cause cache conflicts since both use the same target but different features.
 
 ## Accessing the Built Artifacts
 
