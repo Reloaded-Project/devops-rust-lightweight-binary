@@ -386,13 +386,14 @@ runs:
         echo "Build directory contents:"
         ls "${GITHUB_WORKSPACE}/${{ env.WORKSPACE_PATH }}/target/${{ inputs.target }}/release"
 
-        ## Copy all new files (no directories) from release dir to artifact dir
+        ## Move all new files (no directories) from release dir to artifact dir
         RELEASE_DIR="${GITHUB_WORKSPACE}/${{ env.WORKSPACE_PATH }}/target/${{ inputs.target }}/release"
-        find "$RELEASE_DIR" -type f -newer "${{ env.ARTIFACT_OUT_DIR }}/build_start" -maxdepth 1 -exec cp {} "${{ env.ARTIFACT_OUT_DIR }}/" \;
-        ## Copy directories matching patterns (e.g., .dSYM for macOS debug symbols) from release dir to artifact dir
+        find "$RELEASE_DIR" -type f -newer "${{ env.ARTIFACT_OUT_DIR }}/build_start" -maxdepth 1 -exec mv {} "${{ env.ARTIFACT_OUT_DIR }}/" \;
+        ## Move directories matching patterns (e.g., .dSYM for macOS debug symbols) from release dir to artifact dir
         INCLUDE_DIRS=("*.dSYM")
         for pattern in "${INCLUDE_DIRS[@]}"; do
           for dir in "$RELEASE_DIR"/$pattern; do
+            # mv doesn't work here on macOS for some reason.
             [ -d "$dir" ] && cp -r "$dir" "$ARTIFACT_OUT_DIR/"
           done
         done
