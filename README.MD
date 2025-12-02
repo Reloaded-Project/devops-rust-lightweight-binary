@@ -182,30 +182,7 @@ Artifacts include static (`.a`, `.lib`) and dynamic (`.so`, `.dll`, `.dylib`) li
 
 Find more examples in [the tests](./.github/workflows/test-rust-build-c-library-workflow.yml).
 
-### Custom PGO Project Path
-
-```yaml
-- name: Build C Library
-  uses: Reloaded-Project/devops-rust-lightweight-binary@v1
-  with:
-    rust-project-path: ./rust-project
-    pgo-project-path: ./pgo-project
-    crate-name: my-crate
-    target: x86_64-unknown-linux-gnu
-```
-
-### Using cross-rs for Building
-
-```yaml
-- name: Build C Library
-  uses: Reloaded-Project/devops-rust-lightweight-binary@v1
-  with:
-    crate-name: my-crate
-    target: x86_64-unknown-linux-gnu
-    use-cross: true
-```
-
-### Custom Additional RUSTFLAGS
+### Custom `rustc` Arguments and RUSTFLAGS
 
 ```yaml
 - name: Build C Library
@@ -214,16 +191,6 @@ Find more examples in [the tests](./.github/workflows/test-rust-build-c-library-
     crate-name: my-crate
     target: x86_64-unknown-linux-gnu
     additional-rustflags: -C opt-level=3
-```
-
-### Custom Additional `rustc` Arguments
-
-```yaml
-- name: Build C Library
-  uses: Reloaded-Project/devops-rust-lightweight-binary@v1
-  with:
-    crate-name: my-crate
-    target: x86_64-unknown-linux-gnu
     additional-rustc-args: --all-features
 ```
 
