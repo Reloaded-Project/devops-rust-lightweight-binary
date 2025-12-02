@@ -15,7 +15,7 @@ inputs:
     required: false
     default: "."
   crate-name:
-    description: "Name of the Rust crate/package. This can be used to select a crate within a workspace."
+    description: "Name of the Rust crate/package. Used for naming the artifact/release asset."
     required: true
   target:
     description: "The target platform for the Rust compiler"

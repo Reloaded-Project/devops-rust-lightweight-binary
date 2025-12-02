@@ -122,7 +122,7 @@ These parameters are processed and used directly by the `rust-lightweight-binary
 | `rust-project-path`         | No       | `.`              | Path to the Rust project                                                                                    |
 | `workspace-path`            | No       | `.`              | Workspace folder where `target` directory is. Uses `rust-project-path` if not set.                          |
 | `pgo-project-path`          | No       | `.`              | Path to the Rust project used for gathering PGO data. Can be same or separate project.                      |
-| `crate-name`                | Yes      |                  | Name of the Rust crate (used to determine file name)                                                        |
+| `crate-name`                | Yes      |                  | Name of the Rust crate/package. Used for naming the artifact/release asset.                                 |
 | `target`                    | Yes      |                  | The target platform for the Rust compiler                                                                   |
 | `features`                  | No       | `''`             | Comma-separated list of features to include in the build                                                    |
 | `no-default-features`       | No       | `false`          | Do not include default features in the build                                                                |
