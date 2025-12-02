@@ -311,3 +311,123 @@ jobs:
             exit 1
           fi
           echo "artifact-prefix correctly takes precedence: $ARTIFACT_NAME"
+
+  # Test artifact-name-exclude-features functionality
+  test-artifact-name-exclude-features:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Action
+        uses: actions/checkout@v4
+
+      - name: Test partial exclusion keeps non-excluded features
+        shell: bash
+        run: |
+          ARTIFACT_NAME=$(./scripts/get-artifact-name.sh \
+            --artifact-prefix "MyApp" \
+            --target x86_64-unknown-linux-gnu \
+            --features "c-exports,simd" \
+            --exclude-features "c-exports" \
+            --use-friendly-target-names true \
+            --artifact-type binary)
+          EXPECTED="MyApp-linux-x64-simd"
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME"
+          if [[ "$ARTIFACT_NAME" != "$EXPECTED" ]]; then
+            echo "::error::Expected '$EXPECTED' but got '$ARTIFACT_NAME' (only c-exports should be excluded)"
+            exit 1
+          fi
+          echo "Partial exclusion works: $ARTIFACT_NAME"
+
+      - name: Test all features excluded produces no suffix
+        shell: bash
+        run: |
+          ARTIFACT_NAME=$(./scripts/get-artifact-name.sh \
+            --artifact-prefix "MyApp" \
+            --target x86_64-unknown-linux-gnu \
+            --features "foo,bar" \
+            --exclude-features "foo,bar" \
+            --use-friendly-target-names true \
+            --artifact-type binary)
+          EXPECTED="MyApp-linux-x64"
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME"
+          if [[ "$ARTIFACT_NAME" != "$EXPECTED" ]]; then
+            echo "::error::Expected '$EXPECTED' but got '$ARTIFACT_NAME' (all features should be excluded)"
+            exit 1
+          fi
+          echo "All features excluded works: $ARTIFACT_NAME"
+
+      - name: Test whitespace trimmed from exclude list
+        shell: bash
+        run: |
+          ARTIFACT_NAME=$(./scripts/get-artifact-name.sh \
+            --artifact-prefix "MyApp" \
+            --target x86_64-unknown-linux-gnu \
+            --features "c-exports,simd" \
+            --exclude-features " c-exports , simd " \
+            --use-friendly-target-names true \
+            --artifact-type binary)
+          EXPECTED="MyApp-linux-x64"
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME"
+          if [[ "$ARTIFACT_NAME" != "$EXPECTED" ]]; then
+            echo "::error::Expected '$EXPECTED' but got '$ARTIFACT_NAME' (whitespace should be trimmed)"
+            exit 1
+          fi
+          echo "Whitespace trimming works: $ARTIFACT_NAME"
+
+      - name: Test empty exclude list includes all features
+        shell: bash
+        run: |
+          ARTIFACT_NAME=$(./scripts/get-artifact-name.sh \
+            --artifact-prefix "MyApp" \
+            --target x86_64-unknown-linux-gnu \
+            --features "c-exports" \
+            --exclude-features "" \
+            --use-friendly-target-names true \
+            --artifact-type binary)
+          EXPECTED="MyApp-linux-x64-c-exports"
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME"
+          if [[ "$ARTIFACT_NAME" != "$EXPECTED" ]]; then
+            echo "::error::Expected '$EXPECTED' but got '$ARTIFACT_NAME' (empty exclude list should include all features)"
+            exit 1
+          fi
+          echo "Empty exclude list works: $ARTIFACT_NAME"
+
+      - name: Test exact match only - c-exports does not exclude c-exports-extended
+        shell: bash
+        run: |
+          ARTIFACT_NAME=$(./scripts/get-artifact-name.sh \
+            --artifact-prefix "MyApp" \
+            --target x86_64-unknown-linux-gnu \
+            --features "c-exports-extended" \
+            --exclude-features "c-exports" \
+            --use-friendly-target-names true \
+            --artifact-type binary)
+          EXPECTED="MyApp-linux-x64-c-exports-extended"
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME"
+          if [[ "$ARTIFACT_NAME" != "$EXPECTED" ]]; then
+            echo "::error::Expected '$EXPECTED' but got '$ARTIFACT_NAME' (c-exports should NOT exclude c-exports-extended - exact match only)"
+            exit 1
+          fi
+          echo "Exact match only works: $ARTIFACT_NAME"
+
+      - name: Test action.yml integration pattern with whitespace in exclude-features
+        shell: bash
+        run: |
+          # Simulates the pattern used in action.yml where --exclude-features value is quoted
+          ARTIFACT_SCRIPT="./scripts/get-artifact-name.sh"
+          EXCLUDE_FEATURES_INPUT="c-exports, foo"
+          
+          # This is the fixed pattern from action.yml: --exclude-features "value" (quoted)
+          ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" \
+            --artifact-prefix "MyApp" \
+            --target x86_64-unknown-linux-gnu \
+            --features "c-exports,foo" \
+            --use-friendly-target-names true \
+            --exclude-features "$EXCLUDE_FEATURES_INPUT" \
+            --artifact-type binary)
+          EXPECTED="MyApp-linux-x64"
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME"
+          if [[ "$ARTIFACT_NAME" != "$EXPECTED" ]]; then
+            echo "::error::Expected '$EXPECTED' but got '$ARTIFACT_NAME' (action.yml integration with whitespace should work)"
+            exit 1
+          fi
+          echo "action.yml integration pattern with whitespace works: $ARTIFACT_NAME"

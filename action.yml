@@ -108,6 +108,10 @@ inputs:
       'MyApp-linux-x64'). If empty, no prefix is used."
     required: false
     default: ""
+  artifact-name-exclude-features:
+    description: "Comma-separated list of features to exclude from artifact names. Set to empty string to include all."
+    required: false
+    default: "c-exports"
 
   # ============================================================================
   # Advanced / Low-Level
@@ -260,10 +264,10 @@ runs:
           CRATE_NAME_ARG="--crate-name ${{ inputs.crate-name }}"
         fi
 
-        BINARY_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --artifact-prefix "${{ inputs.artifact-prefix }}" $CRATE_NAME_ARG --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --artifact-type binary)
-        BINARY_SYMBOLS_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --artifact-prefix "${{ inputs.artifact-prefix }}" $CRATE_NAME_ARG --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --artifact-type binary-symbols)
-        LIBRARY_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --artifact-prefix "${{ inputs.artifact-prefix }}" $CRATE_NAME_ARG --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --artifact-type library)
-        LIBRARY_SYMBOLS_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --artifact-prefix "${{ inputs.artifact-prefix }}" $CRATE_NAME_ARG --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --artifact-type library-symbols)
+        BINARY_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --artifact-prefix "${{ inputs.artifact-prefix }}" $CRATE_NAME_ARG --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --exclude-features "${{ inputs.artifact-name-exclude-features }}" --artifact-type binary)
+        BINARY_SYMBOLS_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --artifact-prefix "${{ inputs.artifact-prefix }}" $CRATE_NAME_ARG --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --exclude-features "${{ inputs.artifact-name-exclude-features }}" --artifact-type binary-symbols)
+        LIBRARY_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --artifact-prefix "${{ inputs.artifact-prefix }}" $CRATE_NAME_ARG --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --exclude-features "${{ inputs.artifact-name-exclude-features }}" --artifact-type library)
+        LIBRARY_SYMBOLS_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --artifact-prefix "${{ inputs.artifact-prefix }}" $CRATE_NAME_ARG --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --exclude-features "${{ inputs.artifact-name-exclude-features }}" --artifact-type library-symbols)
 
         echo "BINARY_ARTIFACT_NAME=${BINARY_ARTIFACT_NAME}" >> $GITHUB_ENV
         echo "BINARY_SYMBOLS_ARTIFACT_NAME=${BINARY_SYMBOLS_ARTIFACT_NAME}" >> $GITHUB_ENV

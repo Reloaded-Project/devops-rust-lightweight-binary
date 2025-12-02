@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Generates artifact names for Rust builds.
-# Usage: ./get-artifact-name.sh --target <target> --artifact-type <type> [--artifact-prefix <prefix>] [--crate-name <name>] [--features <features>] [--use-friendly-target-names <true|false>]
+# Usage: ./get-artifact-name.sh --target <target> --artifact-type <type> [--artifact-prefix <prefix>] [--crate-name <name>] [--features <features>] [--use-friendly-target-names <true|false>] [--exclude-features <features>]
 # Outputs the artifact name to stdout.
 
 set -euo pipefail
@@ -14,6 +14,7 @@ TARGET=""
 FEATURES=""
 USE_FRIENDLY_TARGET_NAMES="true"
 ARTIFACT_TYPE=""
+EXCLUDE_FEATURES=""
 
 # Parse named parameters
 while [[ $# -gt 0 ]]; do
@@ -40,6 +41,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --artifact-type)
       ARTIFACT_TYPE="$2"
+      shift 2
+      ;;
+    --exclude-features)
+      EXCLUDE_FEATURES="$2"
       shift 2
       ;;
     *)
@@ -77,9 +82,51 @@ else
   TARGET_FOR_ARTIFACT="$TARGET"
 fi
 
+# Filter features by excluding specified features from the list
+# Args: $1 = features string (comma-separated), $2 = exclude list (comma-separated)
+# Returns: filtered features (comma-separated) or empty string
+filter_features() {
+  local features="$1"
+  local exclude_list="$2"
+
+  # If no features or no exclude list, return features as-is
+  if [[ -z "$features" ]] || [[ -z "$exclude_list" ]]; then
+    echo "$features"
+    return
+  fi
+
+  # Build associative array of features to exclude (with whitespace trimming)
+  declare -A exclude_map
+  IFS=',' read -ra exclude_array <<< "$exclude_list"
+  for item in "${exclude_array[@]}"; do
+    # Trim leading/trailing whitespace
+    trimmed=$(echo "$item" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    if [[ -n "$trimmed" ]]; then
+      exclude_map["$trimmed"]=1
+    fi
+  done
+
+  # Filter features, keeping only those not in exclude list
+  local result=()
+  IFS=',' read -ra features_array <<< "$features"
+  for feature in "${features_array[@]}"; do
+    # Trim leading/trailing whitespace
+    trimmed=$(echo "$feature" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    if [[ -n "$trimmed" ]] && [[ -z "${exclude_map[$trimmed]:-}" ]]; then
+      result+=("$trimmed")
+    fi
+  done
+
+  # Join result with commas
+  local IFS=','
+  echo "${result[*]}"
+}
+
 # Generate feature suffix: -features if set, empty if not
-if [[ -n "$FEATURES" ]]; then
-  FEATURE_SUFFIX="-$FEATURES"
+# Apply exclusion filter before generating suffix
+FILTERED_FEATURES=$(filter_features "$FEATURES" "$EXCLUDE_FEATURES")
+if [[ -n "$FILTERED_FEATURES" ]]; then
+  FEATURE_SUFFIX="-$FILTERED_FEATURES"
 else
   FEATURE_SUFFIX=""
 fi
