@@ -3,7 +3,7 @@
     <img src="assets/reloaded-logo.png" alt="reloaded Logo" width="100"/>
   </a>
 
-  <h1 align="center">Reloaded Rust Build C Library Workflow</h1>
+  <h1 align="center">Reloaded Lightweight Rust Build Action</h1>
 
   <p>
     <a href="LICENSE">
@@ -12,26 +12,22 @@
   </p>
 </div>
 
-This is a GitHub Action that can be used to build an optimized, lightweight binary (or C library)
-from a Rust project.
+A GitHub Action for building optimized, lightweight Rust binaries and C libraries.
 
-This action is used to build binaries with the following properties:
+Uses nightly Rust and nightly-only features to minimize binary size and maximize performance:
 
-- **Self-Built std**: Reduces binary size and improves optimizations.
-- **Abort on Panic**: Reduces binary size. Can be disabled if needed.
-- **Profile Guided Optimization (PGO)**: Improves performance by optimizing based on usage patterns.
-- **Cross-Compilation**: Supports cross-compilation using `cross-rs`.
-- **Nightly Rust**: Uses the latest nightly Rust toolchain by default for building and running. Toolchain can be overridden via `rust-toolchain` parameter to pin to a specific nightly version.
-- **Tests and Coverage**: Optionally run tests and generate coverage reports using the `devops-rust-test-and-coverage` action.
-
-It can be used to build both binaries and C libraries.
+- **Self-Built std**: Smaller binaries, better optimizations.
+- **Abort on Panic**: Smaller binaries. (Can be disabled)
+- **Profile Guided Optimization (PGO)**: Optimizes based on runtime usage patterns.
+- **Cross-Compilation**: Via `cross-rs`.
+- **Tests and Coverage**: Optional, via `devops-rust-test-and-coverage` action.
 
 ## Example Usage
 
 As a single job/step of a workflow:
 
 ```yaml
-test-binary-build:
+build:
   strategy:
     matrix:
       include:
@@ -39,67 +35,33 @@ test-binary-build:
           target: x86_64-unknown-linux-gnu
           use-pgo: true
           use-cross: false
-          use-tarpaulin: true
-        - os: ubuntu-latest
-          target: i686-unknown-linux-gnu
-          use-pgo: true
-          use-cross: false
-          use-tarpaulin: true
-        - os: ubuntu-latest
-          target: aarch64-unknown-linux-gnu
-          use-pgo: false # no native runner
-          use-cross: true
-          use-tarpaulin: true
-        - os: ubuntu-latest
-          target: armv7-unknown-linux-gnueabihf
-          use-pgo: false # no native runner
-          use-cross: true
-          use-tarpaulin: true
         - os: windows-latest
           target: x86_64-pc-windows-msvc
           use-pgo: true
           use-cross: false
-          use-tarpaulin: true
-        - os: windows-latest
-          target: i686-pc-windows-msvc
-          use-pgo: true
-          use-cross: false
-          use-tarpaulin: true
-        # no native github actions runner or cross-rs image
-        #- os: windows-latest
-        #  target: aarch64-pc-windows-msvc
-        #  use-pgo: false # no native runner
-        #  use-cross: false
-        #  use-tarpaulin: true
-        - os: macos-15-intel # x86
-          target: x86_64-apple-darwin
-          use-pgo: true
-          use-cross: false
-          use-tarpaulin: true
-        - os: macos-latest # M1
+        - os: macos-latest
           target: aarch64-apple-darwin
           use-pgo: true
           use-cross: false
-          use-tarpaulin: true
+        - os: ubuntu-latest
+          target: aarch64-unknown-linux-gnu
+          use-pgo: false # no native runner
+          use-cross: true
   runs-on: ${{ matrix.os }}
   steps:
-    - name: Checkout Test Repository
+    - name: Checkout Repository
       uses: actions/checkout@v4
-      with:
-        repository: Sewer56/prs-rs
-        ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
-    - name: Test Binary Build
+    - name: Build Binary
       uses: Reloaded-Project/devops-rust-lightweight-binary@v1
       with:
         target: ${{ matrix.target }}
+        crate-name: "my-crate"
         use-pgo: ${{ matrix.use-pgo }}
         use-cross: ${{ matrix.use-cross }}
-        use-tarpaulin: ${{ matrix.use-tarpaulin }}
-        rust-project-path: "tools/cli/"
-        crate-name: "prs-rs-cli"
-        upload-artifacts: false
-        run-tests-and-coverage: true
 ```
+
+> [!TIP]
+> Adjust `rust-project-path` and `workspace-path` (if using cargo workspaces) if your project is not in the root folder `.`.
 
 ## Setup
 
@@ -113,34 +75,52 @@ To use this action in your own repository:
 
 ### Inputs
 
-#### Parameters Used by This Action
+#### Commonly Used
 
-These parameters are processed and used directly by the `rust-lightweight-binary` action:
+| Input                    | Required | Default | Description                                                                        |
+| ------------------------ | -------- | ------- | ---------------------------------------------------------------------------------- |
+| `rust-project-path`      | No       | `.`     | Path to the Rust project                                                           |
+| `workspace-path`         | No       | `.`     | Workspace folder where `target` directory is. Uses `rust-project-path` if not set. |
+| `build-library`          | No       | `false` | Build a library instead of a binary.                                               |
+| `crate-name`             | Yes      |         | Name of the Rust crate/package. Used for naming the artifact/release asset.        |
+| `target`                 | Yes      |         | The target platform for the Rust compiler                                          |
+| `features`               | No       | `''`    | Comma-separated list of features to include in the build                           |
+| `run-tests-and-coverage` | No       | `false` | Run tests and coverage using the `devops-rust-test-and-coverage` action.           |
+| `use-cache`              | No       | `true`  | Enable or disable the build cache using `Swatinem/rust-cache`.                     |
 
-| Input                       | Required | Default          | Description                                                                                                          |
-| --------------------------- | -------- | ---------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `rust-project-path`         | No       | `.`              | Path to the Rust project                                                                                             |
-| `workspace-path`            | No       | `.`              | Workspace folder where `target` directory is. Uses `rust-project-path` if not set.                                   |
-| `pgo-project-path`          | No       | `.`              | Path to the Rust project used for gathering PGO data. Can be same or separate project.                               |
-| `crate-name`                | Yes      |                  | Name of the Rust crate/package. Used for naming the artifact/release asset.                                          |
-| `target`                    | Yes      |                  | The target platform for the Rust compiler                                                                            |
-| `features`                  | No       | `''`             | Comma-separated list of features to include in the build                                                             |
-| `no-default-features`       | No       | `false`          | Do not include default features in the build                                                                         |
-| `use-pgo`                   | No       | `false`          | Use Profile-Guided Optimization [PGO] to build the library.                                                          |
-| `pgo-benchmark-name`        | No       | `'my_benchmark'` | Benchmark name to use with PGO.                                                                                      |
-| `use-cross`                 | No       | `false`          | Use cross-rs for building. If false, use cargo.                                                                      |
-| `additional-rustflags`      | No       | `''`             | Additional RUSTFLAGS to pass to the Rust compiler                                                                    |
-| `additional-rustc-args`     | No       | `''`             | Additional arguments to pass directly to `rustc`                                                                     |
-| `rust-toolchain`            | No       | `nightly`        | The Rust toolchain to use. Can be nightly or a specific nightly version (e.g., nightly-2025-09-18).                  |
-| `use-cache`                 | No       | `true`           | Enable or disable the build cache using `Swatinem/rust-cache`.                                                       |
-| `upload-artifacts`          | No       | `true`           | Upload the built artifacts as a GitHub Actions artifact                                                              |
-| `upload-symbols-separately` | No       | `true`           | Upload debug symbol files (.pdb, .dwp, .dSYM) as separate artifacts instead of bundling with main artifacts          |
-| `abort-on-panic`            | No       | `true`           | Abort immediately on panic. If false, the default panic handler is used.                                             |
-| `build-library`             | No       | `false`          | Build a library instead of a binary.                                                                                 |
-| `run-tests-and-coverage`    | No       | `false`          | Run tests and coverage using the `devops-rust-test-and-coverage` action.                                             |
-| `size-optimized-std`        | No       | `false`          | Builds `std` with size optimizations, such as reduced `core::fmt` footprint.                                         |
-| `additional-std-features`   | No       | ``               | Specify extra `build-std` features.                                                                                  |
-| `use-friendly-target-names` | No       | `true`           | Transform target triples to user-friendly names (e.g., `x86_64-unknown-linux-gnu` -> `linux-x64`) in artifact names. |
+#### Build Configuration
+
+| Input                 | Required | Default   | Description                                                                                         |
+| --------------------- | -------- | --------- | --------------------------------------------------------------------------------------------------- |
+| `no-default-features` | No       | `false`   | Do not include default features in the build                                                        |
+| `rust-toolchain`      | No       | `nightly` | The Rust toolchain to use. Can be nightly or a specific nightly version (e.g., nightly-2025-09-18). |
+| `use-cross`           | No       | `false`   | Use cross-rs for building. If false, use cargo.                                                     |
+
+#### Optimization Options
+
+| Input                | Required | Default          | Description                                                                            |
+| -------------------- | -------- | ---------------- | -------------------------------------------------------------------------------------- |
+| `use-pgo`            | No       | `false`          | Use Profile-Guided Optimization [PGO] to build the library.                            |
+| `pgo-project-path`   | No       | `.`              | Path to the Rust project used for gathering PGO data. Can be same or separate project. |
+| `pgo-benchmark-name` | No       | `'my_benchmark'` | Benchmark name to use with PGO.                                                        |
+| `abort-on-panic`     | No       | `true`           | Abort immediately on panic. If false, the default panic handler is used.               |
+| `size-optimized-std` | No       | `false`          | Builds `std` with size optimizations, such as reduced `core::fmt` footprint.           |
+
+#### Artifact & Output Settings
+
+| Input                       | Required | Default | Description                                                                                                          |
+| --------------------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
+| `upload-artifacts`          | No       | `true`  | Upload the built artifacts as a GitHub Actions artifact                                                              |
+| `upload-symbols-separately` | No       | `true`  | Upload debug symbol files (.pdb, .dwp, .dSYM) as separate artifacts instead of bundling with main artifacts          |
+| `use-friendly-target-names` | No       | `true`  | Transform target triples to user-friendly names (e.g., `x86_64-unknown-linux-gnu` -> `linux-x64`) in artifact names. |
+
+#### Advanced / Low-Level
+
+| Input                     | Required | Default | Description                                       |
+| ------------------------- | -------- | ------- | ------------------------------------------------- |
+| `additional-rustflags`    | No       | `''`    | Additional RUSTFLAGS to pass to the Rust compiler |
+| `additional-rustc-args`   | No       | `''`    | Additional arguments to pass directly to `rustc`  |
+| `additional-std-features` | No       | ``      | Specify extra `build-std` features.               |
 
 #### Parameters Passed Through to `devops-rust-test-and-coverage`
 
@@ -164,93 +144,53 @@ These parameters are only used when `run-tests-and-coverage` is enabled and are 
 
 ### Setting up Profile-Guided Optimization (PGO)
 
-Profile-Guided Optimization works by compiling and executing a benchmark whose name and project
-can be defined by `pgo-benchmark-name` and `pgo-project-path` respectively. So you should strive
-to keep the benchmark as close to the final usage of your application as possible.
-
-A benchmark for PGO can be defined as follows:
+PGO compiles and runs a benchmark (configured via `pgo-benchmark-name` and `pgo-project-path`) to collect runtime data, then uses that profile to optimize the final build. Keep the benchmark close to real usage patterns:
 
 ```rust
-// Regular benchmarks, not PGO
 #[cfg(not(feature = "pgo"))]
 {
+    // Regular benchmarks, unrealistic for profiling, exclude
     bench_estimate(c);
     bench_decompress(c);
-    bench_compress_file(c);
-    bench_create_dict(c);
 }
 
-// Benchmark with realistic usage patterns for PGO.
 #[cfg(feature = "pgo")]
 {
+    // Realistic usage patterns for PGO
     generate_pgo_data();
 }
 ```
 
-Then said profile is used to build the final version of your application.
-
-For PGO to work, the `target` platform must be the same as the host that generated the profiling
-data. Sometimes you can get away with using `cross` to achieve this, for example:
+PGO requires the target platform to match the host. With `use-cross: true`, cross-compilation may work:
 
 ```yaml
-# Host is x86-linux but this seems to work just a-ok!
-target: aarch64-unknown-linux-gnu # x64 host to to aarch64 simulated guest
+target: aarch64-unknown-linux-gnu  # x64 host to aarch64 simulated guest
 use-pgo: true
 use-cross: true
 ```
 
-If the process fails, your CI will fail, so do experiment.
+If the process fails, your CI will fail, so experiment to find what works.
 
 ## Running Tests and Coverage
 
-To run tests and generate coverage reports as part of the build process, set the
-`run-tests-and-coverage` input to `true`.
+Set `run-tests-and-coverage: true` to run tests and generate coverage after the build.
 
-This will invoke the [devops-rust-test-and-coverage][devops-test-coverage] action after the build
-step, using the same configuration as the build (e.g., `target`, `features`, `use-cross`, etc.).
+This invokes [devops-rust-test-and-coverage][devops-test-coverage] with the same configuration (`target`, `features`, `use-cross`, etc.).
 
-The `devops-rust-test-and-coverage` action will run tests using either `cargo` or `cross`,
-depending on the `use-cross` input. If `use-cross` is `false` and `use-tarpaulin` is `true`, it
-will also generate a coverage report using Tarpaulin and upload it to Codecov (if `upload-coverage` is `true`).
-
-If `cross` is enabled, `use-tarpaulin` is ignored.
+- Tests run via `cargo` or `cross` (based on `use-cross`)
+- Coverage via Tarpaulin when `use-tarpaulin: true` (ignored if `use-cross: true`)
 
 ## Building Libraries
 
-To build a library instead of a binary, set the `build-library` input to `true`.
-This is equivalent to setting `crate-type = ["cdylib", "staticlib"]` in `Cargo.toml`.
+Set `build-library: true` to build a library instead of a binary (equivalent to `crate-type = ["cdylib", "staticlib"]`).
 
-When building a library, the generated artifacts will include static libraries (`.a`, `.lib`) 
-and dynamic libraries (`.so`, `.dll`, `.dylib`) depending on the target platform.
+Artifacts include static (`.a`, `.lib`) and dynamic (`.so`, `.dll`, `.dylib`) libraries depending on target.
 
 ## Examples
 
 Find more examples in [the tests](./.github/workflows/test-rust-build-c-library-workflow.yml).
 
-### Custom PGO Project Path
-
-```yaml
-- name: Build C Library
-  uses: Reloaded-Project/devops-rust-lightweight-binary@v1
-  with:
-    rust-project-path: ./rust-project
-    pgo-project-path: ./pgo-project
-    crate-name: my-crate
-    target: x86_64-unknown-linux-gnu
-```
-
-### Using cross-rs for Building
-
-```yaml
-- name: Build C Library
-  uses: Reloaded-Project/devops-rust-lightweight-binary@v1
-  with:
-    crate-name: my-crate
-    target: x86_64-unknown-linux-gnu
-    use-cross: true
-```
-
-### Custom Additional RUSTFLAGS
+### Custom `rustc` Arguments and RUSTFLAGS
 
 ```yaml
 - name: Build C Library
@@ -259,16 +199,6 @@ Find more examples in [the tests](./.github/workflows/test-rust-build-c-library-
     crate-name: my-crate
     target: x86_64-unknown-linux-gnu
     additional-rustflags: -C opt-level=3
-```
-
-### Custom Additional `rustc` Arguments
-
-```yaml
-- name: Build C Library
-  uses: Reloaded-Project/devops-rust-lightweight-binary@v1
-  with:
-    crate-name: my-crate
-    target: x86_64-unknown-linux-gnu
     additional-rustc-args: --all-features
 ```
 
@@ -285,10 +215,13 @@ Find more examples in [the tests](./.github/workflows/test-rust-build-c-library-
 
 ### Building Multiple Projects
 
-#### Serial Builds (Single Job)
+> [!TIP]
+> The best approach depends on whether your builds share the same settings.
 
-If you are building multiple projects, for example multiple projects in a single workspace, 
-build them in a single job:
+#### Same Settings
+
+When building multiple crates within a workspace with the same settings, use a single job.
+Shared dependencies are compiled once and reused:
 
 ```yaml
 - name: Build API Crate
@@ -297,9 +230,8 @@ build them in a single job:
     rust-project-path: projects/api-crate
     crate-name: api-crate
     target: x86_64-unknown-linux-gnu
-    use-cache: true  # Only first build enables cache
-    upload-artifacts: true
-    # install-binstall: true (default)
+    use-cache: true  # first step: restore cache
+    install-binstall: true  # default
 
 - name: Build CLI Crate
   uses: Reloaded-Project/devops-rust-lightweight-binary@v1
@@ -307,66 +239,42 @@ build them in a single job:
     rust-project-path: projects/cli-crate
     crate-name: cli-crate
     target: x86_64-unknown-linux-gnu
-    use-cache: false  # Subsequent builds disable cache
-    install-binstall: false  # Avoid installing cargo-binstall again
-    upload-artifacts: true
+    use-cache: false  # subsequent steps: disable to avoid duplicate save
+    install-binstall: false  # already installed above
 ```
 
-The cache is restored in `Build API Crate` and saved after completion of `Build CLI Crate`.
-So you should only set `use-cache` on the first project.
+> [!NOTE]
+> Only enable `use-cache` on the first step. The cache is restored at the start and saved after the job completes.
+> Same applies to `install-binstall` - only install once per job.
 
-> [!WARNING]
->
-> If you are using [devops-test-coverage] action, that also creates a cache by default.
-> Be aware of this, you may want to set `use-cache` false if running tests at the end, or set
-> `use-cache` false on `devops-rust-lightweight-binary` if tests are ran first.
->
-> Additionally, cargo-binstall will be installed by default. If you want to avoid installing
-> cargo-binstall multiple times across multiple build steps, set `install-binstall` to false
-> on subsequent steps.
-> 
-> ```yaml
-> - name: Run Tests
->   uses: Reloaded-Project/devops-rust-test-and-coverage@v1
->   with:
->     target: ${{ matrix.target }}
->     use-cross: ${{ matrix.use-cross }}
->     codecov-token: ${{ secrets.CODECOV_TOKEN }}\
->     # use-cache: true # use-cache is enabled by default
->     # install-binstall: true # install-binstall is enabled by default
-> ```
+#### Different Settings
 
-#### Parallel Builds
-
-If you are building multiple projects with either different compiler settings, features, or targets, 
-build them in separate jobs:
+When building crates with different settings, use separate jobs to avoid cache conflicts:
 
 ```yaml
 jobs:
-  build-api:
+  build-standard:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: Reloaded-Project/devops-rust-lightweight-binary@v1
         with:
-          rust-project-path: projects/api-crate
-          crate-name: api-crate
+          crate-name: my-crate
           target: x86_64-unknown-linux-gnu
-          use-cache: true # this is the default
-          upload-artifacts: true
+          features: ""
 
-  build-cli:
+  build-with-simd:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: Reloaded-Project/devops-rust-lightweight-binary@v1
         with:
-          rust-project-path: projects/cli-crate
-          crate-name: cli-crate
+          crate-name: my-crate
           target: x86_64-unknown-linux-gnu
-          use-cache: true # this is the default
-          upload-artifacts: true
+          features: "simd,avx2"
 ```
+
+Building these in a single job would cause cache conflicts since both use the same target but different features.
 
 ## Accessing the Built Artifacts
 

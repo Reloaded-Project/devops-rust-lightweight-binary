@@ -6,14 +6,21 @@ branding:
   color: "red"
 
 inputs:
+  # ============================================================================
+  # Commonly Used
+  # ============================================================================
   rust-project-path:
     description: "Path to the Rust project"
     required: false
     default: "."
-  pgo-project-path:
-    description: "Path to the Rust project used for gathering PGO data. Can be same or separate project."
+  workspace-path:
+    description: "Path to the workspace root. Defaults to rust-project-path if not specified."
     required: false
-    default: "."
+    default: ""
+  build-library:
+    description: 'Build a library instead of a binary. Requires `crate-type = ["cdylib", "staticlib"]` in Cargo.toml.'
+    required: false
+    default: "false"
   crate-name:
     description: "Name of the Rust crate/package. Used for naming the artifact/release asset."
     required: true
@@ -24,30 +31,60 @@ inputs:
     description: "Comma-separated list of features to include in the build"
     required: false
     default: ""
+  run-tests-and-coverage:
+    description: "Run tests and coverage using the `devops-rust-test-and-coverage` action."
+    required: false
+    default: "false"
+  use-cache:
+    description: "Enable or disable the build cache using Swatinem/rust-cache."
+    required: false
+    default: "true"
+
+  # ============================================================================
+  # Build Configuration
+  # ============================================================================
   no-default-features:
     description: "Do not include default features in the build"
     required: false
     default: "false"
-  use-pgo:
-    description: "Use Profile-Guided Optimization [PGO] to build the artifact."
+  rust-toolchain:
+    description:
+      "The Rust toolchain to use for building. Can be nightly or a specific nightly version (nightly-2025-09-18). Note:
+      stable and beta are not supported due to required nightly features."
     required: false
-    default: "false"
-  pgo-benchmark-name:
-    description: "Benchmark name to use with PGO."
-    required: false
-    default: "my_benchmark"
+    default: "nightly"
   use-cross:
     description: "Use cross-rs for building. If false, use cargo."
     required: false
     default: "false"
-  additional-rustflags:
-    description: "Additional RUSTFLAGS to pass to the Rust compiler"
+
+  # ============================================================================
+  # Optimization Options
+  # ============================================================================
+  use-pgo:
+    description: "Use Profile-Guided Optimization [PGO] to build the artifact."
     required: false
-    default: ""
-  additional-rustc-args:
-    description: "Additional arguments to pass directly to rustc"
+    default: "false"
+  pgo-project-path:
+    description: "Path to the Rust project used for gathering PGO data. Can be same or separate project."
     required: false
-    default: ""
+    default: "."
+  pgo-benchmark-name:
+    description: "Benchmark name to use with PGO."
+    required: false
+    default: "my_benchmark"
+  abort-on-panic:
+    description: "Abort immediately on panic. If false, the default panic handler is used."
+    required: false
+    default: "true"
+  size-optimized-std:
+    description: "Enable size optimization for std by adding `optimize_for_size` to build-std-features."
+    required: false
+    default: "false"
+
+  # ============================================================================
+  # Artifact & Output Settings
+  # ============================================================================
   upload-artifacts:
     description: "Upload the built artifacts as a GitHub Actions artifact"
     required: false
@@ -57,18 +94,32 @@ inputs:
       "Upload debug symbol files (.pdb, .dwp, .dSYM) as separate artifacts instead of bundling with main artifacts"
     required: false
     default: "true"
-  abort-on-panic:
-    description: "Abort immediately on panic. If false, the default panic handler is used."
+  use-friendly-target-names:
+    description:
+      "Transform target triples to user-friendly names (e.g., x86_64-unknown-linux-gnu -> linux-x64) in artifact names"
     required: false
     default: "true"
-  build-library:
-    description: 'Build a library instead of a binary. Requires `crate-type = ["cdylib", "staticlib"]` in Cargo.toml.'
+
+  # ============================================================================
+  # Advanced / Low-Level
+  # ============================================================================
+  additional-rustflags:
+    description: "Additional RUSTFLAGS to pass to the Rust compiler"
     required: false
-    default: "false"
-  run-tests-and-coverage:
-    description: "Run tests and coverage using the `devops-rust-test-and-coverage` action."
+    default: ""
+  additional-rustc-args:
+    description: "Additional arguments to pass directly to rustc"
     required: false
-    default: "false"
+    default: ""
+  additional-std-features:
+    description: "Additional build-std features to include (comma-separated)."
+    required: false
+    default: ""
+
+  # ============================================================================
+  # Parameters Passed Through to devops-rust-test-and-coverage
+  # (Only used when run-tests-and-coverage is enabled)
+  # ============================================================================
   upload-coverage-to-codecov:
     description: "Uploads coverage to codecov if `run-tests-and-coverage` is enabled."
     required: false
@@ -76,24 +127,8 @@ inputs:
   codecov-token:
     description: "Codecov token for uploading coverage"
     required: false
-  size-optimized-std:
-    description: "Enable size optimization for std by adding `optimize_for_size` to build-std-features."
-    required: false
-    default: "false"
-  additional-std-features:
-    description: "Additional build-std features to include (comma-separated)."
-    required: false
-    default: ""
   use-tarpaulin:
     description: "Use tarpaulin for code coverage. If false, code coverage will be disabled."
-    required: false
-    default: "true"
-  workspace-path:
-    description: "Path to the workspace root. Defaults to rust-project-path if not specified."
-    required: false
-    default: ""
-  use-cache:
-    description: "Enable or disable the build cache using Swatinem/rust-cache."
     required: false
     default: "true"
   use-binstall:
@@ -108,15 +143,13 @@ inputs:
       already available in the environment."
     required: false
     default: "true"
-  rust-toolchain:
-    description:
-      "The Rust toolchain to use for building. Can be nightly or a specific nightly version (nightly-2025-09-18). Note:
-      stable and beta are not supported due to required nightly features."
-    required: false
-    default: "nightly"
   additional-test-args:
     description:
       "Additional arguments passed directly to the cargo test command (e.g., '--ignored --test-threads=1 --lib')"
+    required: false
+    default: ""
+  additional-tarpaulin-args:
+    description: "Additional arguments to pass to the cargo tarpaulin command"
     required: false
     default: ""
   codecov-flags:
@@ -127,14 +160,6 @@ inputs:
     description: "Custom defined name for the coverage upload"
     required: false
     default: "codecov-umbrella"
-  additional-tarpaulin-args:
-    description: "Additional arguments to pass to the cargo tarpaulin command"
-    required: false
-    default: ""
-  use-friendly-target-names:
-    description: "Transform target triples to user-friendly names (e.g., x86_64-unknown-linux-gnu -> linux-x64) in artifact names"
-    required: false
-    default: "true"
 
 runs:
   using: "composite"
