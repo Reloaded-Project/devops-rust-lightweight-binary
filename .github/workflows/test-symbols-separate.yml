@@ -39,7 +39,6 @@ jobs:
         uses: ./
         with:
           rust-project-path: test-project/src/cli
-          crate-name: prs-rs-cli
           target: ${{ matrix.target }}
           workspace-path: test-project/src
 
@@ -178,7 +177,7 @@ jobs:
         uses: ./
         with:
           rust-project-path: test-project/src/prs-rs
-          crate-name: prs-rs
+          artifact-prefix: c-library
           target: ${{ matrix.target }}
           workspace-path: test-project/src
           build-library: true
