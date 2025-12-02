@@ -1,0 +1,275 @@
+name: Test Artifact Names
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Run daily at midnight
+  workflow_dispatch:
+  pull_request:
+    branches: [v1-master]
+    paths:
+      - "action.yml"
+      - "scripts/get-artifact-name.sh"
+      - "scripts/get-friendly-target-name.sh"
+      - ".github/workflows/test-artifact-names.yml"
+
+jobs:
+  test-artifact-names:
+    strategy:
+      matrix:
+        include:
+          # Linux targets - friendly names
+          - use-friendly-target-names: "true"
+            target: x86_64-unknown-linux-gnu
+            expected-binary-name: "test-crate-linux-x64"
+            expected-binary-symbols-name: "test-crate-linux-x64.symbols"
+            expected-library-name: "C-Library-test-crate-linux-x64"
+            expected-library-symbols-name: "C-Library-test-crate-linux-x64.symbols"
+          - use-friendly-target-names: "true"
+            target: i686-unknown-linux-gnu
+            expected-binary-name: "test-crate-linux-x86"
+            expected-binary-symbols-name: "test-crate-linux-x86.symbols"
+            expected-library-name: "C-Library-test-crate-linux-x86"
+            expected-library-symbols-name: "C-Library-test-crate-linux-x86.symbols"
+          - use-friendly-target-names: "true"
+            target: aarch64-unknown-linux-gnu
+            expected-binary-name: "test-crate-linux-arm64"
+            expected-binary-symbols-name: "test-crate-linux-arm64.symbols"
+            expected-library-name: "C-Library-test-crate-linux-arm64"
+            expected-library-symbols-name: "C-Library-test-crate-linux-arm64.symbols"
+          - use-friendly-target-names: "true"
+            target: armv7-unknown-linux-gnueabihf
+            expected-binary-name: "test-crate-linux-armv7-hf"
+            expected-binary-symbols-name: "test-crate-linux-armv7-hf.symbols"
+            expected-library-name: "C-Library-test-crate-linux-armv7-hf"
+            expected-library-symbols-name: "C-Library-test-crate-linux-armv7-hf.symbols"
+          # Linux targets - raw triples
+          - use-friendly-target-names: "false"
+            target: x86_64-unknown-linux-gnu
+            expected-binary-name: "test-crate-x86_64-unknown-linux-gnu"
+            expected-binary-symbols-name: "test-crate-x86_64-unknown-linux-gnu.symbols"
+            expected-library-name: "C-Library-test-crate-x86_64-unknown-linux-gnu"
+            expected-library-symbols-name: "C-Library-test-crate-x86_64-unknown-linux-gnu.symbols"
+          - use-friendly-target-names: "false"
+            target: i686-unknown-linux-gnu
+            expected-binary-name: "test-crate-i686-unknown-linux-gnu"
+            expected-binary-symbols-name: "test-crate-i686-unknown-linux-gnu.symbols"
+            expected-library-name: "C-Library-test-crate-i686-unknown-linux-gnu"
+            expected-library-symbols-name: "C-Library-test-crate-i686-unknown-linux-gnu.symbols"
+          - use-friendly-target-names: "false"
+            target: aarch64-unknown-linux-gnu
+            expected-binary-name: "test-crate-aarch64-unknown-linux-gnu"
+            expected-binary-symbols-name: "test-crate-aarch64-unknown-linux-gnu.symbols"
+            expected-library-name: "C-Library-test-crate-aarch64-unknown-linux-gnu"
+            expected-library-symbols-name: "C-Library-test-crate-aarch64-unknown-linux-gnu.symbols"
+          - use-friendly-target-names: "false"
+            target: armv7-unknown-linux-gnueabihf
+            expected-binary-name: "test-crate-armv7-unknown-linux-gnueabihf"
+            expected-binary-symbols-name: "test-crate-armv7-unknown-linux-gnueabihf.symbols"
+            expected-library-name: "C-Library-test-crate-armv7-unknown-linux-gnueabihf"
+            expected-library-symbols-name: "C-Library-test-crate-armv7-unknown-linux-gnueabihf.symbols"
+          # Windows targets - friendly names
+          - use-friendly-target-names: "true"
+            target: x86_64-pc-windows-msvc
+            expected-binary-name: "test-crate-windows-x64"
+            expected-binary-symbols-name: "test-crate-windows-x64.symbols"
+            expected-library-name: "C-Library-test-crate-windows-x64"
+            expected-library-symbols-name: "C-Library-test-crate-windows-x64.symbols"
+          - use-friendly-target-names: "true"
+            target: i686-pc-windows-msvc
+            expected-binary-name: "test-crate-windows-x86"
+            expected-binary-symbols-name: "test-crate-windows-x86.symbols"
+            expected-library-name: "C-Library-test-crate-windows-x86"
+            expected-library-symbols-name: "C-Library-test-crate-windows-x86.symbols"
+          - use-friendly-target-names: "true"
+            target: aarch64-pc-windows-msvc
+            expected-binary-name: "test-crate-windows-arm64"
+            expected-binary-symbols-name: "test-crate-windows-arm64.symbols"
+            expected-library-name: "C-Library-test-crate-windows-arm64"
+            expected-library-symbols-name: "C-Library-test-crate-windows-arm64.symbols"
+          # Windows targets - raw triples
+          - use-friendly-target-names: "false"
+            target: x86_64-pc-windows-msvc
+            expected-binary-name: "test-crate-x86_64-pc-windows-msvc"
+            expected-binary-symbols-name: "test-crate-x86_64-pc-windows-msvc.symbols"
+            expected-library-name: "C-Library-test-crate-x86_64-pc-windows-msvc"
+            expected-library-symbols-name: "C-Library-test-crate-x86_64-pc-windows-msvc.symbols"
+          - use-friendly-target-names: "false"
+            target: i686-pc-windows-msvc
+            expected-binary-name: "test-crate-i686-pc-windows-msvc"
+            expected-binary-symbols-name: "test-crate-i686-pc-windows-msvc.symbols"
+            expected-library-name: "C-Library-test-crate-i686-pc-windows-msvc"
+            expected-library-symbols-name: "C-Library-test-crate-i686-pc-windows-msvc.symbols"
+          - use-friendly-target-names: "false"
+            target: aarch64-pc-windows-msvc
+            expected-binary-name: "test-crate-aarch64-pc-windows-msvc"
+            expected-binary-symbols-name: "test-crate-aarch64-pc-windows-msvc.symbols"
+            expected-library-name: "C-Library-test-crate-aarch64-pc-windows-msvc"
+            expected-library-symbols-name: "C-Library-test-crate-aarch64-pc-windows-msvc.symbols"
+          # macOS targets - friendly names
+          - use-friendly-target-names: "true"
+            target: x86_64-apple-darwin
+            expected-binary-name: "test-crate-macos-x64"
+            expected-binary-symbols-name: "test-crate-macos-x64.symbols"
+            expected-library-name: "C-Library-test-crate-macos-x64"
+            expected-library-symbols-name: "C-Library-test-crate-macos-x64.symbols"
+          - use-friendly-target-names: "true"
+            target: aarch64-apple-darwin
+            expected-binary-name: "test-crate-macos-arm64"
+            expected-binary-symbols-name: "test-crate-macos-arm64.symbols"
+            expected-library-name: "C-Library-test-crate-macos-arm64"
+            expected-library-symbols-name: "C-Library-test-crate-macos-arm64.symbols"
+          # macOS targets - raw triples
+          - use-friendly-target-names: "false"
+            target: x86_64-apple-darwin
+            expected-binary-name: "test-crate-x86_64-apple-darwin"
+            expected-binary-symbols-name: "test-crate-x86_64-apple-darwin.symbols"
+            expected-library-name: "C-Library-test-crate-x86_64-apple-darwin"
+            expected-library-symbols-name: "C-Library-test-crate-x86_64-apple-darwin.symbols"
+          - use-friendly-target-names: "false"
+            target: aarch64-apple-darwin
+            expected-binary-name: "test-crate-aarch64-apple-darwin"
+            expected-binary-symbols-name: "test-crate-aarch64-apple-darwin.symbols"
+            expected-library-name: "C-Library-test-crate-aarch64-apple-darwin"
+            expected-library-symbols-name: "C-Library-test-crate-aarch64-apple-darwin.symbols"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Action
+        uses: actions/checkout@v4
+
+      - name: Test binary artifact name
+        shell: bash
+        run: |
+          ARTIFACT_NAME=$(./scripts/get-artifact-name.sh \
+            --crate-name test-crate \
+            --target ${{ matrix.target }} \
+            --use-friendly-target-names ${{ matrix.use-friendly-target-names }} \
+            --artifact-type binary)
+          EXPECTED="${{ matrix.expected-binary-name }}"
+          echo "BINARY_ARTIFACT_NAME=$ARTIFACT_NAME"
+          if [[ "$ARTIFACT_NAME" != "$EXPECTED" ]]; then
+            echo "::error::Expected '$EXPECTED' but got '$ARTIFACT_NAME'"
+            exit 1
+          fi
+          echo "Binary artifact name correct: $ARTIFACT_NAME"
+
+      - name: Test binary-symbols artifact name
+        shell: bash
+        run: |
+          ARTIFACT_NAME=$(./scripts/get-artifact-name.sh \
+            --crate-name test-crate \
+            --target ${{ matrix.target }} \
+            --use-friendly-target-names ${{ matrix.use-friendly-target-names }} \
+            --artifact-type binary-symbols)
+          EXPECTED="${{ matrix.expected-binary-symbols-name }}"
+          echo "BINARY_SYMBOLS_ARTIFACT_NAME=$ARTIFACT_NAME"
+          if [[ "$ARTIFACT_NAME" != "$EXPECTED" ]]; then
+            echo "::error::Expected '$EXPECTED' but got '$ARTIFACT_NAME'"
+            exit 1
+          fi
+          echo "Binary symbols artifact name correct: $ARTIFACT_NAME"
+
+      - name: Test library artifact name
+        shell: bash
+        run: |
+          ARTIFACT_NAME=$(./scripts/get-artifact-name.sh \
+            --crate-name test-crate \
+            --target ${{ matrix.target }} \
+            --use-friendly-target-names ${{ matrix.use-friendly-target-names }} \
+            --artifact-type library)
+          EXPECTED="${{ matrix.expected-library-name }}"
+          echo "LIBRARY_ARTIFACT_NAME=$ARTIFACT_NAME"
+          if [[ "$ARTIFACT_NAME" != "$EXPECTED" ]]; then
+            echo "::error::Expected '$EXPECTED' but got '$ARTIFACT_NAME'"
+            exit 1
+          fi
+          echo "Library artifact name correct: $ARTIFACT_NAME"
+
+      - name: Test library-symbols artifact name
+        shell: bash
+        run: |
+          ARTIFACT_NAME=$(./scripts/get-artifact-name.sh \
+            --crate-name test-crate \
+            --target ${{ matrix.target }} \
+            --use-friendly-target-names ${{ matrix.use-friendly-target-names }} \
+            --artifact-type library-symbols)
+          EXPECTED="${{ matrix.expected-library-symbols-name }}"
+          echo "LIBRARY_SYMBOLS_ARTIFACT_NAME=$ARTIFACT_NAME"
+          if [[ "$ARTIFACT_NAME" != "$EXPECTED" ]]; then
+            echo "::error::Expected '$EXPECTED' but got '$ARTIFACT_NAME'"
+            exit 1
+          fi
+          echo "Library symbols artifact name correct: $ARTIFACT_NAME"
+
+  test-artifact-names-with-features:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Action
+        uses: actions/checkout@v4
+
+      - name: Test binary with features
+        shell: bash
+        run: |
+          ARTIFACT_NAME=$(./scripts/get-artifact-name.sh \
+            --crate-name test-crate \
+            --target x86_64-unknown-linux-gnu \
+            --features "feature1,feature2" \
+            --use-friendly-target-names true \
+            --artifact-type binary)
+          EXPECTED="test-crate-linux-x64-feature1,feature2"
+          echo "ARTIFACT_NAME_WITH_FEATURES=$ARTIFACT_NAME"
+          if [[ "$ARTIFACT_NAME" != "$EXPECTED" ]]; then
+            echo "::error::Expected '$EXPECTED' but got '$ARTIFACT_NAME'"
+            exit 1
+          fi
+          echo "Feature suffix correctly appended: $ARTIFACT_NAME"
+
+      - name: Test binary-symbols with features
+        shell: bash
+        run: |
+          ARTIFACT_NAME=$(./scripts/get-artifact-name.sh \
+            --crate-name test-crate \
+            --target x86_64-unknown-linux-gnu \
+            --features "feature1,feature2" \
+            --use-friendly-target-names true \
+            --artifact-type binary-symbols)
+          EXPECTED="test-crate-linux-x64-feature1,feature2.symbols"
+          echo "ARTIFACT_NAME_WITH_FEATURES=$ARTIFACT_NAME"
+          if [[ "$ARTIFACT_NAME" != "$EXPECTED" ]]; then
+            echo "::error::Expected '$EXPECTED' but got '$ARTIFACT_NAME'"
+            exit 1
+          fi
+          echo "Feature suffix correctly appended: $ARTIFACT_NAME"
+
+      - name: Test library with features
+        shell: bash
+        run: |
+          ARTIFACT_NAME=$(./scripts/get-artifact-name.sh \
+            --crate-name test-crate \
+            --target x86_64-unknown-linux-gnu \
+            --features "feature1,feature2" \
+            --use-friendly-target-names true \
+            --artifact-type library)
+          EXPECTED="C-Library-test-crate-linux-x64-feature1,feature2"
+          echo "ARTIFACT_NAME_WITH_FEATURES=$ARTIFACT_NAME"
+          if [[ "$ARTIFACT_NAME" != "$EXPECTED" ]]; then
+            echo "::error::Expected '$EXPECTED' but got '$ARTIFACT_NAME'"
+            exit 1
+          fi
+          echo "Feature suffix correctly appended: $ARTIFACT_NAME"
+
+      - name: Test library-symbols with features
+        shell: bash
+        run: |
+          ARTIFACT_NAME=$(./scripts/get-artifact-name.sh \
+            --crate-name test-crate \
+            --target x86_64-unknown-linux-gnu \
+            --features "feature1,feature2" \
+            --use-friendly-target-names true \
+            --artifact-type library-symbols)
+          EXPECTED="C-Library-test-crate-linux-x64-feature1,feature2.symbols"
+          echo "ARTIFACT_NAME_WITH_FEATURES=$ARTIFACT_NAME"
+          if [[ "$ARTIFACT_NAME" != "$EXPECTED" ]]; then
+            echo "::error::Expected '$EXPECTED' but got '$ARTIFACT_NAME'"
+            exit 1
+          fi
+          echo "Feature suffix correctly appended: $ARTIFACT_NAME"
