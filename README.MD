@@ -3,7 +3,7 @@
     <img src="assets/reloaded-logo.png" alt="reloaded Logo" width="100"/>
   </a>
 
-  <h1 align="center">Reloaded Rust Build C Library Workflow</h1>
+  <h1 align="center">Reloaded Lightweight Rust Build Action</h1>
 
   <p>
     <a href="LICENSE">
@@ -12,19 +12,15 @@
   </p>
 </div>
 
-This is a GitHub Action that can be used to build an optimized, lightweight binary (or C library)
-from a Rust project.
+A GitHub Action for building optimized, lightweight Rust binaries and C libraries.
 
-This action is used to build binaries with the following properties:
+Uses nightly Rust and nightly-only features to minimize binary size and maximize performance:
 
-- **Self-Built std**: Reduces binary size and improves optimizations.
-- **Abort on Panic**: Reduces binary size. Can be disabled if needed.
-- **Profile Guided Optimization (PGO)**: Improves performance by optimizing based on usage patterns.
-- **Cross-Compilation**: Supports cross-compilation using `cross-rs`.
-- **Nightly Rust**: Uses the latest nightly Rust toolchain by default for building and running. Toolchain can be overridden via `rust-toolchain` parameter to pin to a specific nightly version.
-- **Tests and Coverage**: Optionally run tests and generate coverage reports using the `devops-rust-test-and-coverage` action.
-
-It can be used to build both binaries and C libraries.
+- **Self-Built std**: Smaller binaries, better optimizations.
+- **Abort on Panic**: Smaller binaries. (Can be disabled)
+- **Profile Guided Optimization (PGO)**: Optimizes based on runtime usage patterns.
+- **Cross-Compilation**: Via `cross-rs`.
+- **Tests and Coverage**: Optional, via `devops-rust-test-and-coverage` action.
 
 ## Example Usage
 
