@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Generates artifact names for Rust builds.
-# Usage: ./get-artifact-name.sh --crate-name <name> --target <target> --artifact-type <type> [--features <features>] [--use-friendly-target-names <true|false>]
+# Usage: ./get-artifact-name.sh --target <target> --artifact-type <type> [--artifact-prefix <prefix>] [--crate-name <name>] [--features <features>] [--use-friendly-target-names <true|false>]
 # Outputs the artifact name to stdout.
 
 set -euo pipefail
@@ -8,6 +8,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Default values
+ARTIFACT_PREFIX=""
 CRATE_NAME=""
 TARGET=""
 FEATURES=""
@@ -17,6 +18,10 @@ ARTIFACT_TYPE=""
 # Parse named parameters
 while [[ $# -gt 0 ]]; do
   case $1 in
+    --artifact-prefix)
+      ARTIFACT_PREFIX="$2"
+      shift 2
+      ;;
     --crate-name)
       CRATE_NAME="$2"
       shift 2
@@ -45,11 +50,6 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate required parameters
-if [[ -z "$CRATE_NAME" ]]; then
-  echo "Error: --crate-name is required" >&2
-  exit 1
-fi
-
 if [[ -z "$TARGET" ]]; then
   echo "Error: --target is required" >&2
   exit 1
@@ -84,18 +84,42 @@ else
   FEATURE_SUFFIX=""
 fi
 
+# Determine artifact prefix based on precedence:
+# 1. If artifact-prefix is non-empty, use it
+# 2. Else if crate-name is set, use legacy logic (crate-name for binary, C-Library-crate-name for library)
+# 3. Else no prefix (just target[-features])
+generate_prefix() {
+  local artifact_type="$1"
+  if [[ -n "$ARTIFACT_PREFIX" ]]; then
+    echo "${ARTIFACT_PREFIX}-"
+  elif [[ -n "$CRATE_NAME" ]]; then
+    # Legacy behaviour
+    case "$artifact_type" in
+      binary|binary-symbols)
+        echo "${CRATE_NAME}-"
+        ;;
+      library|library-symbols)
+        echo "C-Library-${CRATE_NAME}-"
+        ;;
+    esac
+  else
+    echo ""
+  fi
+}
+
 # Generate artifact name based on type
+PREFIX=$(generate_prefix "$ARTIFACT_TYPE")
 case "$ARTIFACT_TYPE" in
   binary)
-    echo "${CRATE_NAME}-${TARGET_FOR_ARTIFACT}${FEATURE_SUFFIX}"
+    echo "${PREFIX}${TARGET_FOR_ARTIFACT}${FEATURE_SUFFIX}"
     ;;
   binary-symbols)
-    echo "${CRATE_NAME}-${TARGET_FOR_ARTIFACT}${FEATURE_SUFFIX}.symbols"
+    echo "${PREFIX}${TARGET_FOR_ARTIFACT}${FEATURE_SUFFIX}.symbols"
     ;;
   library)
-    echo "C-Library-${CRATE_NAME}-${TARGET_FOR_ARTIFACT}${FEATURE_SUFFIX}"
+    echo "${PREFIX}${TARGET_FOR_ARTIFACT}${FEATURE_SUFFIX}"
     ;;
   library-symbols)
-    echo "C-Library-${CRATE_NAME}-${TARGET_FOR_ARTIFACT}${FEATURE_SUFFIX}.symbols"
+    echo "${PREFIX}${TARGET_FOR_ARTIFACT}${FEATURE_SUFFIX}.symbols"
     ;;
 esac

@@ -22,8 +22,11 @@ inputs:
     required: false
     default: "false"
   crate-name:
-    description: "Name of the Rust crate/package. Used for naming the artifact/release asset."
-    required: true
+    description:
+      "Name of the Rust crate/package. Used for cache key and artifact directory. Legacy: also used for artifact naming
+      if artifact-prefix not set (deprecated)."
+    required: false
+    default: ""
   target:
     description: "The target platform for the Rust compiler"
     required: true
@@ -99,6 +102,12 @@ inputs:
       "Transform target triples to user-friendly names (e.g., x86_64-unknown-linux-gnu -> linux-x64) in artifact names"
     required: false
     default: "true"
+  artifact-prefix:
+    description:
+      "Prefix for artifact names. Combined with target/features to form final artifact name (e.g., 'MyApp' ->
+      'MyApp-linux-x64'). If empty, no prefix is used."
+    required: false
+    default: ""
 
   # ============================================================================
   # Advanced / Low-Level
@@ -221,7 +230,11 @@ runs:
 
         # Note: This directory has been crafted to be unique, and within 'target' for caching.
         # Unique such that different project builds within the same workspace generate valid artifacts
-        ARTIFACT_OUT_DIR="${BASE_PATH}artifact-out/${{ inputs.crate-name }}/${{ inputs.target }}/${{ env.SAFE_FEATURES }}"
+        CRATE_NAME_FOR_DIR="${{ inputs.crate-name }}"
+        if [ -z "$CRATE_NAME_FOR_DIR" ]; then
+          CRATE_NAME_FOR_DIR="default"
+        fi
+        ARTIFACT_OUT_DIR="${BASE_PATH}artifact-out/${CRATE_NAME_FOR_DIR}/${{ inputs.target }}/${{ env.SAFE_FEATURES }}"
         mkdir -p "$ARTIFACT_OUT_DIR"
         echo "ARTIFACT_OUT_DIR=${ARTIFACT_OUT_DIR}" >> $GITHUB_ENV
 
@@ -230,16 +243,27 @@ runs:
       run: |
         ARTIFACT_SCRIPT="$GITHUB_ACTION_PATH/scripts/get-artifact-name.sh"
 
+        # Emit deprecation warning when crate-name is used for artifact naming (without artifact-prefix)
+        if [ -n "${{ inputs.crate-name }}" ] && [ -z "${{ inputs.artifact-prefix }}" ]; then
+          echo "::warning::Using 'crate-name' for artifact naming is deprecated. Please use 'artifact-prefix' instead. See documentation for migration guide."
+        fi
+
         # Build features argument conditionally to avoid passing empty --features ""
         FEATURES_ARG=""
         if [ -n "${{ inputs.features }}" ]; then
           FEATURES_ARG="--features ${{ inputs.features }}"
         fi
 
-        BINARY_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --crate-name "${{ inputs.crate-name }}" --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --artifact-type binary)
-        BINARY_SYMBOLS_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --crate-name "${{ inputs.crate-name }}" --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --artifact-type binary-symbols)
-        LIBRARY_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --crate-name "${{ inputs.crate-name }}" --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --artifact-type library)
-        LIBRARY_SYMBOLS_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --crate-name "${{ inputs.crate-name }}" --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --artifact-type library-symbols)
+        # Build crate-name argument conditionally
+        CRATE_NAME_ARG=""
+        if [ -n "${{ inputs.crate-name }}" ]; then
+          CRATE_NAME_ARG="--crate-name ${{ inputs.crate-name }}"
+        fi
+
+        BINARY_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --artifact-prefix "${{ inputs.artifact-prefix }}" $CRATE_NAME_ARG --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --artifact-type binary)
+        BINARY_SYMBOLS_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --artifact-prefix "${{ inputs.artifact-prefix }}" $CRATE_NAME_ARG --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --artifact-type binary-symbols)
+        LIBRARY_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --artifact-prefix "${{ inputs.artifact-prefix }}" $CRATE_NAME_ARG --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --artifact-type library)
+        LIBRARY_SYMBOLS_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --artifact-prefix "${{ inputs.artifact-prefix }}" $CRATE_NAME_ARG --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --artifact-type library-symbols)
 
         echo "BINARY_ARTIFACT_NAME=${BINARY_ARTIFACT_NAME}" >> $GITHUB_ENV
         echo "BINARY_SYMBOLS_ARTIFACT_NAME=${BINARY_SYMBOLS_ARTIFACT_NAME}" >> $GITHUB_ENV
@@ -251,9 +275,10 @@ runs:
       uses: Swatinem/rust-cache@v2
       with:
         key:
-          build-${{ env.WORKSPACE_PATH }}-${{ inputs.crate-name }}-${{ inputs.target }}-${{ env.SAFE_FEATURES }}-${{
-          env.SAFE_ADDITIONAL_STD_FEATURES }}-${{ env.SAFE_ADDITIONAL_RUSTC_ARGS }}-${{ inputs.no-default-features
-          }}-${{ inputs.build-library }}-${{ inputs.crate-types }}-${{ inputs.use-cross }}-${{ inputs.rust-toolchain }}
+          build-${{ env.WORKSPACE_PATH }}-${{ inputs.crate-name || 'default' }}-${{ inputs.target }}-${{
+          env.SAFE_FEATURES }}-${{ env.SAFE_ADDITIONAL_STD_FEATURES }}-${{ env.SAFE_ADDITIONAL_RUSTC_ARGS }}-${{
+          inputs.no-default-features }}-${{ inputs.build-library }}-${{ inputs.crate-types }}-${{ inputs.use-cross
+          }}-${{ inputs.rust-toolchain }}
         cache-on-failure: true
         cache-all-crates: true
         workspaces: |

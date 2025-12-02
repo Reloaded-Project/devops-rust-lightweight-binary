@@ -77,16 +77,15 @@ To use this action in your own repository:
 
 #### Commonly Used
 
-| Input                    | Required | Default | Description                                                                        |
-| ------------------------ | -------- | ------- | ---------------------------------------------------------------------------------- |
-| `rust-project-path`      | No       | `.`     | Path to the Rust project                                                           |
-| `workspace-path`         | No       | `.`     | Workspace folder where `target` directory is. Uses `rust-project-path` if not set. |
-| `build-library`          | No       | `false` | Build a library instead of a binary.                                               |
-| `crate-name`             | Yes      |         | Name of the Rust crate/package. Used for naming the artifact/release asset.        |
-| `target`                 | Yes      |         | The target platform for the Rust compiler                                          |
-| `features`               | No       | `''`    | Comma-separated list of features to include in the build                           |
-| `run-tests-and-coverage` | No       | `false` | Run tests and coverage using the `devops-rust-test-and-coverage` action.           |
-| `use-cache`              | No       | `true`  | Enable or disable the build cache using `Swatinem/rust-cache`.                     |
+| Input                    | Required | Default | Description                                                                          |
+| ------------------------ | -------- | ------- | ------------------------------------------------------------------------------------ |
+| `rust-project-path`      | No       | `.`     | Path to the Rust project                                                             |
+| `workspace-path`         | No       | `.`     | Workspace folder where `target` directory is. Uses `rust-project-path` if not set.   |
+| `build-library`          | No       | `false` | Build a library instead of a binary.                                                 |
+| `target`                 | Yes      |         | The target platform for the Rust compiler                                            |
+| `features`               | No       | `''`    | Comma-separated list of features to include in the build                             |
+| `run-tests-and-coverage` | No       | `false` | Run tests and coverage using the `devops-rust-test-and-coverage` action.             |
+| `use-cache`              | No       | `true`  | Enable or disable the build cache using `Swatinem/rust-cache`.                       |
 
 #### Build Configuration
 
@@ -108,11 +107,12 @@ To use this action in your own repository:
 
 #### Artifact & Output Settings
 
-| Input                       | Required | Default | Description                                                                                                          |
-| --------------------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
-| `upload-artifacts`          | No       | `true`  | Upload the built artifacts as a GitHub Actions artifact                                                              |
-| `upload-symbols-separately` | No       | `true`  | Upload debug symbol files (.pdb, .dwp, .dSYM) as separate artifacts instead of bundling with main artifacts          |
-| `use-friendly-target-names` | No       | `true`  | Transform target triples to user-friendly names (e.g., `x86_64-unknown-linux-gnu` -> `linux-x64`) in artifact names. |
+| Input                       | Required | Default | Description                                                                                                                                    |
+| --------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `upload-artifacts`          | No       | `true`  | Upload the built artifacts as a GitHub Actions artifact                                                                                        |
+| `upload-symbols-separately` | No       | `true`  | Upload debug symbol files (.pdb, .dwp, .dSYM) as separate artifacts instead of bundling with main artifacts                                    |
+| `use-friendly-target-names` | No       | `true`  | Transform target triples to user-friendly names (e.g., `x86_64-unknown-linux-gnu` -> `linux-x64`) in artifact names.                           |
+| `artifact-prefix`           | No       | `''`    | Prefix for artifact names. Combined with target/features to form final name (e.g., `MyApp` -> `MyApp-linux-x64`). If empty, no prefix is used. |
 
 #### Advanced / Low-Level
 
@@ -281,24 +281,61 @@ Building these in a single job would cause cache conflicts since both use the sa
 After a successful run, the built artifacts will be available as a downloadable
 artifact in the GitHub Actions run.
 
-For binary builds, the artifact will be named `${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}`.
+### Artifact Naming
 
-For library builds, the artifact will be named `C-Library-${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}`.
+Artifact names follow the pattern: `{artifact-prefix}-{target}[-features]` or `{target}[-features]` when no prefix is set.
 
-When `use-friendly-target-names` is enabled, the target triple in artifact names is replaced with a
+| Scenario                  | Example Name                             |
+| ------------------------- | ---------------------------------------- |
+| No prefix, friendly names | `linux-x64`, `windows-arm64`             |
+| With prefix `MyApp`       | `MyApp-linux-x64`, `MyApp-windows-arm64` |
+| With features `simd,avx2` | `linux-x64-simd,avx2`                    |
+| With prefix and features  | `MyApp-linux-x64-simd,avx2`              |
+
+When `use-friendly-target-names` is enabled (default), the target triple is replaced with a
 user-friendly platform identifier (e.g., `x86_64-unknown-linux-gnu` becomes `linux-x64`,
 `aarch64-apple-darwin` becomes `macos-arm64`). Unmapped targets fall back to the raw target triple.
 
-When `upload-symbols-separately` is enabled (default), debug symbols are uploaded as separate artifacts:
+When `upload-symbols-separately` is enabled (default), debug symbols are uploaded as separate artifacts
+with a `.symbols` suffix:
 
-- Binary symbols: `${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}.symbols`
-- Library symbols: `C-Library-${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}.symbols`
+- Main artifact: `MyApp-linux-x64`
+- Symbol artifact: `MyApp-linux-x64.symbols`
+
+### Downloading Artifacts
 
 To access the artifacts:
 
 1. Navigate to the Actions tab in your repository.
 2. Click on the workflow run that built the artifacts.
 3. In the "Artifacts" section, you will find the generated artifacts, which you can download.
+
+## Deprecated Options
+
+### `crate-name` Parameter
+
+| Input        | Required | Default | Description                                                                   |
+| ------------ | -------- | ------- | ----------------------------------------------------------------------------- |
+| `crate-name` | No       | `''`    | Name of the Rust crate/package. Used for cache key and artifact directory.   |
+
+The `crate-name` parameter is still used for:
+- **Cache key**: When provided, it helps create unique cache keys for your builds
+- **Artifact directory**: Used in the `ARTIFACT_OUT_DIR` path construction
+
+However, using `crate-name` for **artifact naming** is deprecated. Please use `artifact-prefix` instead.
+
+#### Legacy Artifact Naming Behaviour
+
+For backwards compatibility, if `crate-name` is set and `artifact-prefix` is not provided, the legacy
+naming behaviour is used:
+
+- Binary artifacts: `{crate-name}-{target}[-features]`
+- Library artifacts: `C-Library-{crate-name}-{target}[-features]`
+
+A deprecation warning will appear in the workflow logs when this legacy behaviour is triggered.
+
+**Migration**: Replace `crate-name: my-crate` with `artifact-prefix: my-crate` for binaries, or
+`artifact-prefix: C-Library-my-crate` for libraries to maintain the same artifact names.
 
 ## Why this Exists?
 
