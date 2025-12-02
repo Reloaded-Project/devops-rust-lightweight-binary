@@ -207,10 +207,13 @@ Find more examples in [the tests](./.github/workflows/test-rust-build-c-library-
 
 ### Building Multiple Projects
 
-#### Serial Builds (Single Job)
+> [!TIP]
+> The best approach depends on whether your builds share the same settings.
 
-If you are building multiple projects, for example multiple projects in a single workspace, 
-build them in a single job:
+#### Same Settings
+
+When building multiple crates within a workspace with the same settings, use a single job.
+Shared dependencies are compiled once and reused:
 
 ```yaml
 - name: Build API Crate
@@ -219,9 +222,8 @@ build them in a single job:
     rust-project-path: projects/api-crate
     crate-name: api-crate
     target: x86_64-unknown-linux-gnu
-    use-cache: true  # Only first build enables cache
-    upload-artifacts: true
-    # install-binstall: true (default)
+    use-cache: true  # first step: restore cache
+    install-binstall: true  # default
 
 - name: Build CLI Crate
   uses: Reloaded-Project/devops-rust-lightweight-binary@v1
@@ -229,39 +231,17 @@ build them in a single job:
     rust-project-path: projects/cli-crate
     crate-name: cli-crate
     target: x86_64-unknown-linux-gnu
-    use-cache: false  # Subsequent builds disable cache
-    install-binstall: false  # Avoid installing cargo-binstall again
-    upload-artifacts: true
+    use-cache: false  # subsequent steps: disable to avoid duplicate save
+    install-binstall: false  # already installed above
 ```
 
-The cache is restored in `Build API Crate` and saved after completion of `Build CLI Crate`.
-So you should only set `use-cache` on the first project.
+> [!NOTE]
+> Only enable `use-cache` on the first step. The cache is restored at the start and saved after the job completes.
+> Same applies to `install-binstall` - only install once per job.
 
-> [!WARNING]
->
-> If you are using [devops-test-coverage] action, that also creates a cache by default.
-> Be aware of this, you may want to set `use-cache` false if running tests at the end, or set
-> `use-cache` false on `devops-rust-lightweight-binary` if tests are ran first.
->
-> Additionally, cargo-binstall will be installed by default. If you want to avoid installing
-> cargo-binstall multiple times across multiple build steps, set `install-binstall` to false
-> on subsequent steps.
-> 
-> ```yaml
-> - name: Run Tests
->   uses: Reloaded-Project/devops-rust-test-and-coverage@v1
->   with:
->     target: ${{ matrix.target }}
->     use-cross: ${{ matrix.use-cross }}
->     codecov-token: ${{ secrets.CODECOV_TOKEN }}\
->     # use-cache: true # use-cache is enabled by default
->     # install-binstall: true # install-binstall is enabled by default
-> ```
+#### Different Settings
 
-#### Parallel Builds
-
-If you are building the same crate with different compiler settings, features, or targets, 
-build them in separate jobs to avoid cache conflicts:
+When building crates with different settings, use separate jobs to avoid cache conflicts:
 
 ```yaml
 jobs:
