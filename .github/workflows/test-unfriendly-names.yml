@@ -1,15 +1,9 @@
 name: Test Friendly Target Names (Disabled)
 
 on:
+  schedule:
+    - cron: "0 0 * * *" # Run daily at midnight
   workflow_dispatch:
-  push:
-    tags:
-      - "v1"
-      - "v1-test"
-    paths:
-      - "action.yml"
-      - "scripts/get-friendly-target-name.sh"
-      - ".github/workflows/test-unfriendly-names.yml"
   pull_request:
     branches: [v1-master]
     paths:

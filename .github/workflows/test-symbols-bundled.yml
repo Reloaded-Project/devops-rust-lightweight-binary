@@ -4,13 +4,6 @@ on:
   schedule:
     - cron: "0 0 * * *" # Run daily at midnight
   workflow_dispatch:
-  push:
-    tags:
-      - "v1"
-      - "v1-test"
-    paths:
-      - "action.yml"
-      - ".github/workflows/test-symbols-bundled.yml"
   pull_request:
     branches: [v1-master]
     paths:
