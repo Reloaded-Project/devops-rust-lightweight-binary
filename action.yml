@@ -131,6 +131,10 @@ inputs:
     description: "Additional arguments to pass to the cargo tarpaulin command"
     required: false
     default: ""
+  use-friendly-target-names:
+    description: "Transform target triples to user-friendly names (e.g., x86_64-unknown-linux-gnu -> linux-x64) in artifact names"
+    required: false
+    default: "true"
 
 runs:
   using: "composite"
@@ -199,6 +203,13 @@ runs:
     - name: Generate artifact names
       shell: bash
       run: |
+        # Resolve target name for artifact (friendly or raw)
+        if [ "${{ inputs.use-friendly-target-names }}" == "true" ]; then
+          TARGET_FOR_ARTIFACT=$("$GITHUB_ACTION_PATH/scripts/get-friendly-target-name.sh" "${{ inputs.target }}")
+        else
+          TARGET_FOR_ARTIFACT="${{ inputs.target }}"
+        fi
+
         # Generate feature suffix: -features if set, empty if not
         if [ -n "${{ inputs.features }}" ]; then
           FEATURE_SUFFIX="-${{ inputs.features }}"
@@ -207,8 +218,8 @@ runs:
         fi
 
         # Generate full artifact names
-        BINARY_ARTIFACT_NAME="${{ inputs.crate-name }}-${{ inputs.target }}${FEATURE_SUFFIX}"
-        LIBRARY_ARTIFACT_NAME="C-Library-${{ inputs.crate-name }}-${{ inputs.target }}${FEATURE_SUFFIX}"
+        BINARY_ARTIFACT_NAME="${{ inputs.crate-name }}-${TARGET_FOR_ARTIFACT}${FEATURE_SUFFIX}"
+        LIBRARY_ARTIFACT_NAME="C-Library-${{ inputs.crate-name }}-${TARGET_FOR_ARTIFACT}${FEATURE_SUFFIX}"
 
         echo "BINARY_ARTIFACT_NAME=${BINARY_ARTIFACT_NAME}" >> $GITHUB_ENV
         echo "BINARY_SYMBOLS_ARTIFACT_NAME=${BINARY_ARTIFACT_NAME}.symbols" >> $GITHUB_ENV

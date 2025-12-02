@@ -117,29 +117,30 @@ To use this action in your own repository:
 
 These parameters are processed and used directly by the `rust-lightweight-binary` action:
 
-| Input                       | Required | Default          | Description                                                                                                 |
-| --------------------------- | -------- | ---------------- | ----------------------------------------------------------------------------------------------------------- |
-| `rust-project-path`         | No       | `.`              | Path to the Rust project                                                                                    |
-| `workspace-path`            | No       | `.`              | Workspace folder where `target` directory is. Uses `rust-project-path` if not set.                          |
-| `pgo-project-path`          | No       | `.`              | Path to the Rust project used for gathering PGO data. Can be same or separate project.                      |
-| `crate-name`                | Yes      |                  | Name of the Rust crate/package. Used for naming the artifact/release asset.                                 |
-| `target`                    | Yes      |                  | The target platform for the Rust compiler                                                                   |
-| `features`                  | No       | `''`             | Comma-separated list of features to include in the build                                                    |
-| `no-default-features`       | No       | `false`          | Do not include default features in the build                                                                |
-| `use-pgo`                   | No       | `false`          | Use Profile-Guided Optimization [PGO] to build the library.                                                 |
-| `pgo-benchmark-name`        | No       | `'my_benchmark'` | Benchmark name to use with PGO.                                                                             |
-| `use-cross`                 | No       | `false`          | Use cross-rs for building. If false, use cargo.                                                             |
-| `additional-rustflags`      | No       | `''`             | Additional RUSTFLAGS to pass to the Rust compiler                                                           |
-| `additional-rustc-args`     | No       | `''`             | Additional arguments to pass directly to `rustc`                                                            |
-| `rust-toolchain`            | No       | `nightly`        | The Rust toolchain to use. Can be nightly or a specific nightly version (e.g., nightly-2025-09-18).         |
-| `use-cache`                 | No       | `true`           | Enable or disable the build cache using `Swatinem/rust-cache`.                                              |
-| `upload-artifacts`          | No       | `true`           | Upload the built artifacts as a GitHub Actions artifact                                                     |
-| `upload-symbols-separately` | No       | `true`           | Upload debug symbol files (.pdb, .dwp, .dSYM) as separate artifacts instead of bundling with main artifacts |
-| `abort-on-panic`            | No       | `true`           | Abort immediately on panic. If false, the default panic handler is used.                                    |
-| `build-library`             | No       | `false`          | Build a library instead of a binary.                                                                        |
-| `run-tests-and-coverage`    | No       | `false`          | Run tests and coverage using the `devops-rust-test-and-coverage` action.                                    |
-| `size-optimized-std`        | No       | `false`          | Builds `std` with size optimizations, such as reduced `core::fmt` footprint.                                |
-| `additional-std-features`   | No       | ``               | Specify extra `build-std` features.                                                                         |
+| Input                       | Required | Default          | Description                                                                                                          |
+| --------------------------- | -------- | ---------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `rust-project-path`         | No       | `.`              | Path to the Rust project                                                                                             |
+| `workspace-path`            | No       | `.`              | Workspace folder where `target` directory is. Uses `rust-project-path` if not set.                                   |
+| `pgo-project-path`          | No       | `.`              | Path to the Rust project used for gathering PGO data. Can be same or separate project.                               |
+| `crate-name`                | Yes      |                  | Name of the Rust crate/package. Used for naming the artifact/release asset.                                          |
+| `target`                    | Yes      |                  | The target platform for the Rust compiler                                                                            |
+| `features`                  | No       | `''`             | Comma-separated list of features to include in the build                                                             |
+| `no-default-features`       | No       | `false`          | Do not include default features in the build                                                                         |
+| `use-pgo`                   | No       | `false`          | Use Profile-Guided Optimization [PGO] to build the library.                                                          |
+| `pgo-benchmark-name`        | No       | `'my_benchmark'` | Benchmark name to use with PGO.                                                                                      |
+| `use-cross`                 | No       | `false`          | Use cross-rs for building. If false, use cargo.                                                                      |
+| `additional-rustflags`      | No       | `''`             | Additional RUSTFLAGS to pass to the Rust compiler                                                                    |
+| `additional-rustc-args`     | No       | `''`             | Additional arguments to pass directly to `rustc`                                                                     |
+| `rust-toolchain`            | No       | `nightly`        | The Rust toolchain to use. Can be nightly or a specific nightly version (e.g., nightly-2025-09-18).                  |
+| `use-cache`                 | No       | `true`           | Enable or disable the build cache using `Swatinem/rust-cache`.                                                       |
+| `upload-artifacts`          | No       | `true`           | Upload the built artifacts as a GitHub Actions artifact                                                              |
+| `upload-symbols-separately` | No       | `true`           | Upload debug symbol files (.pdb, .dwp, .dSYM) as separate artifacts instead of bundling with main artifacts          |
+| `abort-on-panic`            | No       | `true`           | Abort immediately on panic. If false, the default panic handler is used.                                             |
+| `build-library`             | No       | `false`          | Build a library instead of a binary.                                                                                 |
+| `run-tests-and-coverage`    | No       | `false`          | Run tests and coverage using the `devops-rust-test-and-coverage` action.                                             |
+| `size-optimized-std`        | No       | `false`          | Builds `std` with size optimizations, such as reduced `core::fmt` footprint.                                         |
+| `additional-std-features`   | No       | ``               | Specify extra `build-std` features.                                                                                  |
+| `use-friendly-target-names` | No       | `true`           | Transform target triples to user-friendly names (e.g., `x86_64-unknown-linux-gnu` -> `linux-x64`) in artifact names. |
 
 #### Parameters Passed Through to `devops-rust-test-and-coverage`
 
@@ -375,6 +376,10 @@ artifact in the GitHub Actions run.
 For binary builds, the artifact will be named `${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}`.
 
 For library builds, the artifact will be named `C-Library-${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}`.
+
+When `use-friendly-target-names` is enabled, the target triple in artifact names is replaced with a
+user-friendly platform identifier (e.g., `x86_64-unknown-linux-gnu` becomes `linux-x64`,
+`aarch64-apple-darwin` becomes `macos-arm64`). Unmapped targets fall back to the raw target triple.
 
 When `upload-symbols-separately` is enabled (default), debug symbols are uploaded as separate artifacts:
 
