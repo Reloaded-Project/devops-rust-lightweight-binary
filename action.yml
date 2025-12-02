@@ -203,28 +203,23 @@ runs:
     - name: Generate artifact names
       shell: bash
       run: |
-        # Resolve target name for artifact (friendly or raw)
-        if [ "${{ inputs.use-friendly-target-names }}" == "true" ]; then
-          TARGET_FOR_ARTIFACT=$("$GITHUB_ACTION_PATH/scripts/get-friendly-target-name.sh" "${{ inputs.target }}")
-        else
-          TARGET_FOR_ARTIFACT="${{ inputs.target }}"
-        fi
+        ARTIFACT_SCRIPT="$GITHUB_ACTION_PATH/scripts/get-artifact-name.sh"
 
-        # Generate feature suffix: -features if set, empty if not
+        # Build features argument conditionally to avoid passing empty --features ""
+        FEATURES_ARG=""
         if [ -n "${{ inputs.features }}" ]; then
-          FEATURE_SUFFIX="-${{ inputs.features }}"
-        else
-          FEATURE_SUFFIX=""
+          FEATURES_ARG="--features ${{ inputs.features }}"
         fi
 
-        # Generate full artifact names
-        BINARY_ARTIFACT_NAME="${{ inputs.crate-name }}-${TARGET_FOR_ARTIFACT}${FEATURE_SUFFIX}"
-        LIBRARY_ARTIFACT_NAME="C-Library-${{ inputs.crate-name }}-${TARGET_FOR_ARTIFACT}${FEATURE_SUFFIX}"
+        BINARY_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --crate-name "${{ inputs.crate-name }}" --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --artifact-type binary)
+        BINARY_SYMBOLS_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --crate-name "${{ inputs.crate-name }}" --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --artifact-type binary-symbols)
+        LIBRARY_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --crate-name "${{ inputs.crate-name }}" --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --artifact-type library)
+        LIBRARY_SYMBOLS_ARTIFACT_NAME=$("$ARTIFACT_SCRIPT" --crate-name "${{ inputs.crate-name }}" --target "${{ inputs.target }}" $FEATURES_ARG --use-friendly-target-names "${{ inputs.use-friendly-target-names }}" --artifact-type library-symbols)
 
         echo "BINARY_ARTIFACT_NAME=${BINARY_ARTIFACT_NAME}" >> $GITHUB_ENV
-        echo "BINARY_SYMBOLS_ARTIFACT_NAME=${BINARY_ARTIFACT_NAME}.symbols" >> $GITHUB_ENV
+        echo "BINARY_SYMBOLS_ARTIFACT_NAME=${BINARY_SYMBOLS_ARTIFACT_NAME}" >> $GITHUB_ENV
         echo "LIBRARY_ARTIFACT_NAME=${LIBRARY_ARTIFACT_NAME}" >> $GITHUB_ENV
-        echo "LIBRARY_SYMBOLS_ARTIFACT_NAME=${LIBRARY_ARTIFACT_NAME}.symbols" >> $GITHUB_ENV
+        echo "LIBRARY_SYMBOLS_ARTIFACT_NAME=${LIBRARY_SYMBOLS_ARTIFACT_NAME}" >> $GITHUB_ENV
 
     - name: Setup Rust Caching
       if: inputs.use-cache == 'true'
