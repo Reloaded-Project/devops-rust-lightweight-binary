@@ -126,42 +126,32 @@ These parameters are only used when `run-tests-and-coverage` is enabled and are 
 
 ### Setting up Profile-Guided Optimization (PGO)
 
-Profile-Guided Optimization works by compiling and executing a benchmark whose name and project
-can be defined by `pgo-benchmark-name` and `pgo-project-path` respectively. So you should strive
-to keep the benchmark as close to the final usage of your application as possible.
-
-A benchmark for PGO can be defined as follows:
+PGO compiles and runs a benchmark (configured via `pgo-benchmark-name` and `pgo-project-path`) to collect runtime data, then uses that profile to optimize the final build. Keep the benchmark close to real usage patterns:
 
 ```rust
-// Regular benchmarks, not PGO
 #[cfg(not(feature = "pgo"))]
 {
+    // Regular benchmarks, unrealistic for profiling, exclude
     bench_estimate(c);
     bench_decompress(c);
-    bench_compress_file(c);
-    bench_create_dict(c);
 }
 
-// Benchmark with realistic usage patterns for PGO.
 #[cfg(feature = "pgo")]
 {
+    // Realistic usage patterns for PGO
     generate_pgo_data();
 }
 ```
 
-Then said profile is used to build the final version of your application.
-
-For PGO to work, the `target` platform must be the same as the host that generated the profiling
-data. Sometimes you can get away with using `cross` to achieve this, for example:
+PGO requires the target platform to match the host. With `use-cross: true`, cross-compilation may work:
 
 ```yaml
-# Host is x86-linux but this seems to work just a-ok!
-target: aarch64-unknown-linux-gnu # x64 host to to aarch64 simulated guest
+target: aarch64-unknown-linux-gnu  # x64 host to aarch64 simulated guest
 use-pgo: true
 use-cross: true
 ```
 
-If the process fails, your CI will fail, so do experiment.
+If the process fails, your CI will fail, so experiment to find what works.
 
 ## Running Tests and Coverage
 
