@@ -274,11 +274,7 @@ runs:
       if: inputs.use-cache == 'true'
       uses: Swatinem/rust-cache@v2
       with:
-        key:
-          build-${{ env.WORKSPACE_PATH }}-${{ inputs.artifact-prefix || 'default' }}-${{ inputs.target }}-${{
-          env.SAFE_FEATURES }}-${{ env.SAFE_ADDITIONAL_STD_FEATURES }}-${{ env.SAFE_ADDITIONAL_RUSTC_ARGS }}-${{
-          inputs.no-default-features }}-${{ inputs.build-library }}-${{ inputs.crate-types }}-${{ inputs.use-cross
-          }}-${{ inputs.rust-toolchain }}
+        key: ${{ inputs.build-library == 'true' && env.LIBRARY_ARTIFACT_NAME || env.BINARY_ARTIFACT_NAME }}
         cache-on-failure: true
         cache-all-crates: true
         workspaces: |
