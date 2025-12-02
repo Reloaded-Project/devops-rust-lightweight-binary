@@ -174,11 +174,9 @@ This invokes [devops-rust-test-and-coverage][devops-test-coverage] with the same
 
 ## Building Libraries
 
-To build a library instead of a binary, set the `build-library` input to `true`.
-This is equivalent to setting `crate-type = ["cdylib", "staticlib"]` in `Cargo.toml`.
+Set `build-library: true` to build a library instead of a binary (equivalent to `crate-type = ["cdylib", "staticlib"]`).
 
-When building a library, the generated artifacts will include static libraries (`.a`, `.lib`) 
-and dynamic libraries (`.so`, `.dll`, `.dylib`) depending on the target platform.
+Artifacts include static (`.a`, `.lib`) and dynamic (`.so`, `.dll`, `.dylib`) libraries depending on target.
 
 ## Examples
 
