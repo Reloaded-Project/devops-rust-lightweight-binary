@@ -50,7 +50,7 @@ jobs:
       - name: Download Main Binary Artifact
         uses: actions/download-artifact@v6
         with:
-          name: prs-rs-cli-${{ matrix.target }}-
+          name: prs-rs-cli-${{ matrix.target }}
           path: main-artifact
 
       - name: Assert Main Artifact Contains Binary and Symbols (Bundled)
@@ -107,7 +107,7 @@ jobs:
         id: download-symbols
         continue-on-error: true
         with:
-          name: prs-rs-cli-${{ matrix.target }}-.symbols
+          name: prs-rs-cli-${{ matrix.target }}.symbols
           path: symbols-artifact
 
       - name: Assert Symbols Artifact Does Not Exist
@@ -152,7 +152,7 @@ jobs:
       - name: Download Main Library Artifact
         uses: actions/download-artifact@v6
         with:
-          name: C-Library-prs-rs-${{ matrix.target }}-
+          name: C-Library-prs-rs-${{ matrix.target }}
           path: main-artifact
 
       - name: Assert Main Artifact Contains Library and Symbols (Bundled)
@@ -217,7 +217,7 @@ jobs:
         id: download-symbols
         continue-on-error: true
         with:
-          name: C-Library-prs-rs-${{ matrix.target }}-.symbols
+          name: C-Library-prs-rs-${{ matrix.target }}.symbols
           path: symbols-artifact
 
       - name: Assert Symbols Artifact Does Not Exist

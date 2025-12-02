@@ -196,6 +196,25 @@ runs:
         mkdir -p "$ARTIFACT_OUT_DIR"
         echo "ARTIFACT_OUT_DIR=${ARTIFACT_OUT_DIR}" >> $GITHUB_ENV
 
+    - name: Generate artifact names
+      shell: bash
+      run: |
+        # Generate feature suffix: -features if set, empty if not
+        if [ -n "${{ inputs.features }}" ]; then
+          FEATURE_SUFFIX="-${{ inputs.features }}"
+        else
+          FEATURE_SUFFIX=""
+        fi
+
+        # Generate full artifact names
+        BINARY_ARTIFACT_NAME="${{ inputs.crate-name }}-${{ inputs.target }}${FEATURE_SUFFIX}"
+        LIBRARY_ARTIFACT_NAME="C-Library-${{ inputs.crate-name }}-${{ inputs.target }}${FEATURE_SUFFIX}"
+
+        echo "BINARY_ARTIFACT_NAME=${BINARY_ARTIFACT_NAME}" >> $GITHUB_ENV
+        echo "BINARY_SYMBOLS_ARTIFACT_NAME=${BINARY_ARTIFACT_NAME}.symbols" >> $GITHUB_ENV
+        echo "LIBRARY_ARTIFACT_NAME=${LIBRARY_ARTIFACT_NAME}" >> $GITHUB_ENV
+        echo "LIBRARY_SYMBOLS_ARTIFACT_NAME=${LIBRARY_ARTIFACT_NAME}.symbols" >> $GITHUB_ENV
+
     - name: Setup Rust Caching
       if: inputs.use-cache == 'true'
       uses: Swatinem/rust-cache@v2
@@ -411,7 +430,7 @@ runs:
       if: inputs.upload-artifacts == 'true' && inputs.build-library != 'true'
       uses: actions/upload-artifact@v5
       with:
-        name: ${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}
+        name: ${{ env.BINARY_ARTIFACT_NAME }}
         path: |
           ${{ env.ARTIFACT_OUT_DIR }}
           !${{ env.ARTIFACT_OUT_DIR }}/*.d
@@ -425,7 +444,7 @@ runs:
         'true'
       uses: actions/upload-artifact@v5
       with:
-        name: ${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}.symbols
+        name: ${{ env.BINARY_SYMBOLS_ARTIFACT_NAME }}
         path: |
           ${{ env.ARTIFACT_OUT_DIR }}/*.pdb
           ${{ env.ARTIFACT_OUT_DIR }}/*.dwp
@@ -435,7 +454,7 @@ runs:
       if: inputs.upload-artifacts == 'true' && inputs.build-library == 'true'
       uses: actions/upload-artifact@v5
       with:
-        name: C-Library-${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}
+        name: ${{ env.LIBRARY_ARTIFACT_NAME }}
         path: |
           ${{ env.ARTIFACT_OUT_DIR }}
           ${{ inputs.upload-symbols-separately == 'true' && format('!{0}/*.pdb', env.ARTIFACT_OUT_DIR) || '' }}
@@ -448,7 +467,7 @@ runs:
         'true'
       uses: actions/upload-artifact@v5
       with:
-        name: C-Library-${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}.symbols
+        name: ${{ env.LIBRARY_SYMBOLS_ARTIFACT_NAME }}
         path: |
           ${{ env.ARTIFACT_OUT_DIR }}/*.pdb
           ${{ env.ARTIFACT_OUT_DIR }}/*.dwp

@@ -49,7 +49,7 @@ jobs:
       - name: Download Main Binary Artifact
         uses: actions/download-artifact@v6
         with:
-          name: prs-rs-cli-${{ matrix.target }}-
+          name: prs-rs-cli-${{ matrix.target }}
           path: main-artifact
 
       - name: Assert Main Artifact Has Binary But No Symbols
@@ -104,7 +104,7 @@ jobs:
       - name: Download Symbols Artifact
         uses: actions/download-artifact@v6
         with:
-          name: prs-rs-cli-${{ matrix.target }}-.symbols
+          name: prs-rs-cli-${{ matrix.target }}.symbols
           path: symbols-artifact
 
       - name: Assert Symbols Artifact Has Symbols But No Binary
@@ -185,7 +185,7 @@ jobs:
       - name: Download Main Library Artifact
         uses: actions/download-artifact@v6
         with:
-          name: C-Library-prs-rs-${{ matrix.target }}-
+          name: C-Library-prs-rs-${{ matrix.target }}
           path: main-artifact
 
       - name: Assert Main Artifact Has Library But No Symbols
@@ -246,7 +246,7 @@ jobs:
       - name: Download Symbols Artifact
         uses: actions/download-artifact@v6
         with:
-          name: C-Library-prs-rs-${{ matrix.target }}-.symbols
+          name: C-Library-prs-rs-${{ matrix.target }}.symbols
           path: symbols-artifact
 
       - name: Assert Symbols Artifact Has Symbols But No Library
