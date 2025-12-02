@@ -165,17 +165,12 @@ If the process fails, your CI will fail, so do experiment.
 
 ## Running Tests and Coverage
 
-To run tests and generate coverage reports as part of the build process, set the
-`run-tests-and-coverage` input to `true`.
+Set `run-tests-and-coverage: true` to run tests and generate coverage after the build.
 
-This will invoke the [devops-rust-test-and-coverage][devops-test-coverage] action after the build
-step, using the same configuration as the build (e.g., `target`, `features`, `use-cross`, etc.).
+This invokes [devops-rust-test-and-coverage][devops-test-coverage] with the same configuration (`target`, `features`, `use-cross`, etc.).
 
-The `devops-rust-test-and-coverage` action will run tests using either `cargo` or `cross`,
-depending on the `use-cross` input. If `use-cross` is `false` and `use-tarpaulin` is `true`, it
-will also generate a coverage report using Tarpaulin and upload it to Codecov (if `upload-coverage` is `true`).
-
-If `cross` is enabled, `use-tarpaulin` is ignored.
+- Tests run via `cargo` or `cross` (based on `use-cross`)
+- Coverage via Tarpaulin when `use-tarpaulin: true` (ignored if `use-cross: true`)
 
 ## Building Libraries
 
