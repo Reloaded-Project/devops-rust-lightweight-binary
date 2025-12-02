@@ -1,0 +1,230 @@
+name: Test Symbols Bundled
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Run daily at midnight
+  workflow_dispatch:
+  push:
+    tags:
+      - "v1"
+      - "v1-test"
+    paths:
+      - "action.yml"
+      - ".github/workflows/test-symbols-bundled.yml"
+  pull_request:
+    branches: [v1-master]
+    paths:
+      - "action.yml"
+      - ".github/workflows/test-symbols-bundled.yml"
+
+jobs:
+  # Test that symbols are bundled when upload-symbols-separately is explicitly false (binary)
+  test-binary-bundled:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: aarch64-apple-darwin
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout Test Repository
+        uses: actions/checkout@v6
+        with:
+          repository: Sewer56/prs-rs
+          ref: 039d687e737c40ab7f6deb2c2489a56e105e8082
+
+      - name: Build Binary (upload-symbols-separately=false)
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
+        with:
+          rust-project-path: src/cli
+          crate-name: prs-rs-cli
+          target: ${{ matrix.target }}
+          workspace-path: src
+          upload-symbols-separately: false
+
+      - name: Download Main Binary Artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: prs-rs-cli-${{ matrix.target }}-
+          path: main-artifact
+
+      - name: Assert Main Artifact Contains Binary and Symbols (Bundled)
+        shell: pwsh
+        run: |
+          $os = "${{ matrix.os }}"
+          $artifactDir = "main-artifact"
+
+          if ($os -match "windows") {
+            # Windows: expect prs-rs-cli.exe and prs_rs_cli.pdb (bundled)
+            if (-not (Test-Path "$artifactDir/prs-rs-cli.exe" -PathType Leaf)) {
+              Write-Error "Expected prs-rs-cli.exe but not found"
+              exit 1
+            }
+            Write-Host "Found: prs-rs-cli.exe"
+            
+            if (-not (Test-Path "$artifactDir/prs_rs_cli.pdb" -PathType Leaf)) {
+              Write-Error "Expected prs_rs_cli.pdb (bundled) but not found"
+              exit 1
+            }
+            Write-Host "Found (bundled): prs_rs_cli.pdb"
+          }
+          elseif ($os -match "ubuntu") {
+            # Linux: expect prs-rs-cli binary and prs-rs-cli.dwp
+            if (-not (Test-Path "$artifactDir/prs-rs-cli" -PathType Leaf)) {
+              Write-Error "Expected prs-rs-cli but not found"
+              exit 1
+            }
+            Write-Host "Found: prs-rs-cli"
+            
+            if (-not (Test-Path "$artifactDir/prs-rs-cli.dwp" -PathType Leaf)) {
+              Write-Error "Expected prs-rs-cli.dwp (bundled) but not found"
+              exit 1
+            }
+            Write-Host "Found (bundled): prs-rs-cli.dwp"
+          }
+          elseif ($os -match "macos") {
+            # macOS: expect prs-rs-cli binary and prs-rs-cli.dSYM directory (bundled)
+            if (-not (Test-Path "$artifactDir/prs-rs-cli" -PathType Leaf)) {
+              Write-Error "Expected prs-rs-cli but not found"
+              exit 1
+            }
+            Write-Host "Found: prs-rs-cli"
+            
+            if (-not (Test-Path "$artifactDir/prs-rs-cli.dSYM" -PathType Container)) {
+              Write-Error "Expected prs-rs-cli.dSYM directory (bundled) but not found"
+              exit 1
+            }
+            Write-Host "Found (bundled): prs-rs-cli.dSYM/"
+          }
+
+      - name: Try Download Symbols Artifact (should not exist)
+        uses: actions/download-artifact@v6
+        id: download-symbols
+        continue-on-error: true
+        with:
+          name: prs-rs-cli-${{ matrix.target }}-.symbols
+          path: symbols-artifact
+
+      - name: Assert Symbols Artifact Does Not Exist
+        shell: pwsh
+        run: |
+          if ("${{ steps.download-symbols.outcome }}" -eq "success") {
+            Write-Error ".symbols artifact should NOT exist when upload-symbols-separately=false"
+            exit 1
+          }
+          Write-Host "Verified: .symbols artifact does not exist (as expected)"
+
+  # Test that symbols are bundled when upload-symbols-separately is explicitly false (library)
+  test-library-bundled:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: aarch64-apple-darwin
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout Test Repository
+        uses: actions/checkout@v6
+        with:
+          repository: Sewer56/prs-rs
+          ref: 039d687e737c40ab7f6deb2c2489a56e105e8082
+
+      - name: Build Library (upload-symbols-separately=false)
+        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
+        with:
+          rust-project-path: src/prs-rs
+          crate-name: prs-rs
+          target: ${{ matrix.target }}
+          workspace-path: src
+          build-library: true
+          upload-symbols-separately: false
+
+      - name: Download Main Library Artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: C-Library-prs-rs-${{ matrix.target }}-
+          path: main-artifact
+
+      - name: Assert Main Artifact Contains Library and Symbols (Bundled)
+        shell: pwsh
+        run: |
+          $os = "${{ matrix.os }}"
+          $artifactDir = "main-artifact"
+
+          if ($os -match "windows") {
+            # Windows: expect library files and prs_rs.pdb (bundled)
+            $expectedFiles = @("prs_rs.dll", "prs_rs.dll.lib", "prs_rs.lib", "prs_rs.pdb", "prs_rs.d")
+            foreach ($file in $expectedFiles) {
+              if (-not (Test-Path "$artifactDir/$file" -PathType Leaf)) {
+                Write-Error "Expected $file but not found"
+                exit 1
+              }
+              Write-Host "Found: $file"
+            }
+            
+            # Optional files (may not be generated depending on build configuration)
+            if (Test-Path "$artifactDir/prs_rs.exp" -PathType Leaf) {
+              Write-Host "Found (optional): prs_rs.exp"
+            } else {
+              Write-Host "Optional file not present: prs_rs.exp"
+            }
+          }
+          elseif ($os -match "ubuntu") {
+            # Linux: expect library files and libprs_rs.dwp
+            foreach ($file in @("libprs_rs.so", "libprs_rs.a")) {
+              if (-not (Test-Path "$artifactDir/$file" -PathType Leaf)) {
+                Write-Error "Expected $file but not found"
+                exit 1
+              }
+              Write-Host "Found: $file"
+            }
+            
+            if (-not (Test-Path "$artifactDir/libprs_rs.so.dwp" -PathType Leaf)) {
+              Write-Error "Expected libprs_rs.so.dwp (bundled) but not found"
+              exit 1
+            }
+            Write-Host "Found (bundled): libprs_rs.so.dwp"
+          }
+          elseif ($os -match "macos") {
+            # macOS: expect library files and libprs_rs.dylib.dSYM directory (bundled)
+            foreach ($file in @("libprs_rs.dylib", "libprs_rs.a")) {
+              if (-not (Test-Path "$artifactDir/$file" -PathType Leaf)) {
+                Write-Error "Expected $file but not found"
+                exit 1
+              }
+              Write-Host "Found: $file"
+            }
+            
+            if (-not (Test-Path "$artifactDir/libprs_rs.dylib.dSYM" -PathType Container)) {
+              Write-Error "Expected libprs_rs.dylib.dSYM directory (bundled) but not found"
+              exit 1
+            }
+            Write-Host "Found (bundled): libprs_rs.dylib.dSYM/"
+          }
+
+      - name: Try Download Symbols Artifact (should not exist)
+        uses: actions/download-artifact@v6
+        id: download-symbols
+        continue-on-error: true
+        with:
+          name: C-Library-prs-rs-${{ matrix.target }}-.symbols
+          path: symbols-artifact
+
+      - name: Assert Symbols Artifact Does Not Exist
+        shell: pwsh
+        run: |
+          if ("${{ steps.download-symbols.outcome }}" -eq "success") {
+            Write-Error ".symbols artifact should NOT exist when upload-symbols-separately=false"
+            exit 1
+          }
+          Write-Host "Verified: .symbols artifact does not exist (as expected)"

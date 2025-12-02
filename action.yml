@@ -1,5 +1,6 @@
 name: "Build Optimized Rust Binary"
-description: "Builds a min sized Rust binary or library. With self-built std, abort on panic, PGO and cross-compilation support."
+description:
+  "Builds a min sized Rust binary or library. With self-built std, abort on panic, PGO and cross-compilation support."
 branding:
   icon: "check"
   color: "red"
@@ -51,6 +52,11 @@ inputs:
     description: "Upload the built artifacts as a GitHub Actions artifact"
     required: false
     default: "true"
+  upload-symbols-separately:
+    description:
+      "Upload debug symbol files (.pdb, .dwp, .dSYM) as separate artifacts instead of bundling with main artifacts"
+    required: false
+    default: "true"
   abort-on-panic:
     description: "Abort immediately on panic. If false, the default panic handler is used."
     required: false
@@ -91,19 +97,26 @@ inputs:
     required: false
     default: "true"
   use-binstall:
-    description: "Whether to use cargo-binstall in the test-and-coverage action for installing tools like tarpaulin. This parameter is passed through to the devops-rust-test-and-coverage action."
+    description:
+      "Whether to use cargo-binstall in the test-and-coverage action for installing tools like tarpaulin. This parameter
+      is passed through to the devops-rust-test-and-coverage action."
     required: false
     default: "true"
   install-binstall:
-    description: "Whether to install cargo-binstall to make it available for the test-and-coverage action. If false, assumes it is already available in the environment."
+    description:
+      "Whether to install cargo-binstall to make it available for the test-and-coverage action. If false, assumes it is
+      already available in the environment."
     required: false
     default: "true"
   rust-toolchain:
-    description: "The Rust toolchain to use for building. Can be nightly or a specific nightly version (nightly-2025-09-18). Note: stable and beta are not supported due to required nightly features."
+    description:
+      "The Rust toolchain to use for building. Can be nightly or a specific nightly version (nightly-2025-09-18). Note:
+      stable and beta are not supported due to required nightly features."
     required: false
     default: "nightly"
   additional-test-args:
-    description: "Additional arguments passed directly to the cargo test command (e.g., '--ignored --test-threads=1 --lib')"
+    description:
+      "Additional arguments passed directly to the cargo test command (e.g., '--ignored --test-threads=1 --lib')"
     required: false
     default: ""
   codecov-flags:
@@ -182,7 +195,10 @@ runs:
       if: inputs.use-cache == 'true'
       uses: Swatinem/rust-cache@v2
       with:
-        key: build-${{ env.WORKSPACE_PATH }}-${{ inputs.crate-name }}-${{ inputs.target }}-${{ env.SAFE_FEATURES }}-${{ env.SAFE_ADDITIONAL_STD_FEATURES }}-${{ env.SAFE_ADDITIONAL_RUSTC_ARGS }}-${{ inputs.no-default-features }}-${{ inputs.build-library }}-${{ inputs.crate-types }}-${{ inputs.use-cross }}-${{ inputs.rust-toolchain }}
+        key:
+          build-${{ env.WORKSPACE_PATH }}-${{ inputs.crate-name }}-${{ inputs.target }}-${{ env.SAFE_FEATURES }}-${{
+          env.SAFE_ADDITIONAL_STD_FEATURES }}-${{ env.SAFE_ADDITIONAL_RUSTC_ARGS }}-${{ inputs.no-default-features
+          }}-${{ inputs.build-library }}-${{ inputs.crate-types }}-${{ inputs.use-cross }}-${{ inputs.rust-toolchain }}
         cache-on-failure: true
         cache-all-crates: true
         workspaces: |
@@ -367,8 +383,20 @@ runs:
         echo "$BUILD_CMD +${{ inputs.rust-toolchain }} rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features \"$BUILD_FEATURES_ARGS\" $NO_DEFAULT_FEATURES $ADDITIONAL_RUSTC_ARGS"
         $BUILD_CMD +${{ inputs.rust-toolchain }} rustc --release $BUILD_STD_ARGS --target ${{ inputs.target }} $CRATE_TYPES --features "$BUILD_FEATURES_ARGS" $NO_DEFAULT_FEATURES $ADDITIONAL_RUSTC_ARGS
 
-        ## Copy all new files (no directories) from release dir to artifact dir
-        find "${GITHUB_WORKSPACE}/${{ env.WORKSPACE_PATH }}/target/${{ inputs.target }}/release" -type f -newer "${{ env.ARTIFACT_OUT_DIR }}/build_start" -maxdepth 1 -exec cp {} "${{ env.ARTIFACT_OUT_DIR }}/" \;
+        echo "Build directory contents:"
+        ls "${GITHUB_WORKSPACE}/${{ env.WORKSPACE_PATH }}/target/${{ inputs.target }}/release"
+
+        ## Move all new files (no directories) from release dir to artifact dir
+        RELEASE_DIR="${GITHUB_WORKSPACE}/${{ env.WORKSPACE_PATH }}/target/${{ inputs.target }}/release"
+        find "$RELEASE_DIR" -type f -newer "${{ env.ARTIFACT_OUT_DIR }}/build_start" -maxdepth 1 -exec mv {} "${{ env.ARTIFACT_OUT_DIR }}/" \;
+        ## Move directories matching patterns (e.g., .dSYM for macOS debug symbols) from release dir to artifact dir
+        INCLUDE_DIRS=("*.dSYM")
+        for pattern in "${INCLUDE_DIRS[@]}"; do
+          for dir in "$RELEASE_DIR"/$pattern; do
+            # mv doesn't work here on macOS for some reason.
+            [ -d "$dir" ] && cp -r "$dir" "$ARTIFACT_OUT_DIR/"
+          done
+        done
         rm "${{ env.ARTIFACT_OUT_DIR }}/build_start"
 
         echo "Artifacts directory contents:"
@@ -382,13 +410,44 @@ runs:
         path: |
           ${{ env.ARTIFACT_OUT_DIR }}
           !${{ env.ARTIFACT_OUT_DIR }}/*.d
+          ${{ inputs.upload-symbols-separately == 'true' && format('!{0}/*.pdb', env.ARTIFACT_OUT_DIR) || '' }}
+          ${{ inputs.upload-symbols-separately == 'true' && format('!{0}/*.dwp', env.ARTIFACT_OUT_DIR) || '' }}
+          ${{ inputs.upload-symbols-separately == 'true' && format('!{0}/*.dSYM', env.ARTIFACT_OUT_DIR) || '' }}
+
+    - name: Upload binary symbol artifacts
+      if:
+        inputs.upload-artifacts == 'true' && inputs.build-library != 'true' && inputs.upload-symbols-separately ==
+        'true'
+      uses: actions/upload-artifact@v5
+      with:
+        name: ${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}.symbols
+        path: |
+          ${{ env.ARTIFACT_OUT_DIR }}/*.pdb
+          ${{ env.ARTIFACT_OUT_DIR }}/*.dwp
+          ${{ env.ARTIFACT_OUT_DIR }}/*.dSYM
 
     - name: Upload library artifacts
       if: inputs.upload-artifacts == 'true' && inputs.build-library == 'true'
       uses: actions/upload-artifact@v5
       with:
         name: C-Library-${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}
-        path: ${{ env.ARTIFACT_OUT_DIR }}
+        path: |
+          ${{ env.ARTIFACT_OUT_DIR }}
+          ${{ inputs.upload-symbols-separately == 'true' && format('!{0}/*.pdb', env.ARTIFACT_OUT_DIR) || '' }}
+          ${{ inputs.upload-symbols-separately == 'true' && format('!{0}/*.dwp', env.ARTIFACT_OUT_DIR) || '' }}
+          ${{ inputs.upload-symbols-separately == 'true' && format('!{0}/*.dSYM', env.ARTIFACT_OUT_DIR) || '' }}
+
+    - name: Upload library symbol artifacts
+      if:
+        inputs.upload-artifacts == 'true' && inputs.build-library == 'true' && inputs.upload-symbols-separately ==
+        'true'
+      uses: actions/upload-artifact@v5
+      with:
+        name: C-Library-${{ inputs.crate-name }}-${{ inputs.target }}-${{ inputs.features }}.symbols
+        path: |
+          ${{ env.ARTIFACT_OUT_DIR }}/*.pdb
+          ${{ env.ARTIFACT_OUT_DIR }}/*.dwp
+          ${{ env.ARTIFACT_OUT_DIR }}/*.dSYM
 
     - name: Run Tests and Coverage
       if: inputs.run-tests-and-coverage == 'true'
