@@ -32,24 +32,28 @@ jobs:
             target: aarch64-apple-darwin
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Checkout Action
+        uses: actions/checkout@v6
+
       - name: Checkout Test Repository
         uses: actions/checkout@v6
         with:
           repository: Sewer56/prs-rs
           ref: 039d687e737c40ab7f6deb2c2489a56e105e8082
+          path: test-project
 
       - name: Build Binary (default upload-symbols-separately=true)
-        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
+        uses: ./
         with:
-          rust-project-path: src/cli
+          rust-project-path: test-project/src/cli
           crate-name: prs-rs-cli
           target: ${{ matrix.target }}
-          workspace-path: src
+          workspace-path: test-project/src
 
       - name: Download Main Binary Artifact
         uses: actions/download-artifact@v6
         with:
-          name: prs-rs-cli-${{ matrix.target }}
+          name: ${{ env.BINARY_ARTIFACT_NAME }}
           path: main-artifact
 
       - name: Assert Main Artifact Has Binary But No Symbols
@@ -104,7 +108,7 @@ jobs:
       - name: Download Symbols Artifact
         uses: actions/download-artifact@v6
         with:
-          name: prs-rs-cli-${{ matrix.target }}.symbols
+          name: ${{ env.BINARY_ARTIFACT_NAME }}.symbols
           path: symbols-artifact
 
       - name: Assert Symbols Artifact Has Symbols But No Binary
@@ -167,25 +171,29 @@ jobs:
             target: aarch64-apple-darwin
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Checkout Action
+        uses: actions/checkout@v6
+
       - name: Checkout Test Repository
         uses: actions/checkout@v6
         with:
           repository: Sewer56/prs-rs
           ref: 039d687e737c40ab7f6deb2c2489a56e105e8082
+          path: test-project
 
       - name: Build Library (default upload-symbols-separately=true)
-        uses: Reloaded-Project/devops-rust-lightweight-binary@v1-test
+        uses: ./
         with:
-          rust-project-path: src/prs-rs
+          rust-project-path: test-project/src/prs-rs
           crate-name: prs-rs
           target: ${{ matrix.target }}
-          workspace-path: src
+          workspace-path: test-project/src
           build-library: true
 
       - name: Download Main Library Artifact
         uses: actions/download-artifact@v6
         with:
-          name: C-Library-prs-rs-${{ matrix.target }}
+          name: ${{ env.LIBRARY_ARTIFACT_NAME }}
           path: main-artifact
 
       - name: Assert Main Artifact Has Library But No Symbols
@@ -246,7 +254,7 @@ jobs:
       - name: Download Symbols Artifact
         uses: actions/download-artifact@v6
         with:
-          name: C-Library-prs-rs-${{ matrix.target }}.symbols
+          name: ${{ env.LIBRARY_ARTIFACT_NAME }}.symbols
           path: symbols-artifact
 
       - name: Assert Symbols Artifact Has Symbols But No Library

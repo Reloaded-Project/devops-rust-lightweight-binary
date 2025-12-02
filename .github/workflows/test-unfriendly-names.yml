@@ -1,0 +1,51 @@
+name: Test Friendly Target Names (Disabled)
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v1"
+      - "v1-test"
+    paths:
+      - "action.yml"
+      - "scripts/get-friendly-target-name.sh"
+      - ".github/workflows/test-unfriendly-names.yml"
+  pull_request:
+    branches: [v1-master]
+    paths:
+      - "action.yml"
+      - "scripts/get-friendly-target-name.sh"
+      - ".github/workflows/test-unfriendly-names.yml"
+
+jobs:
+  test-friendly-names-disabled:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Action
+        uses: actions/checkout@v4
+
+      - name: Checkout Test Repository
+        uses: actions/checkout@v4
+        with:
+          repository: Sewer56/prs-rs
+          ref: 149060527e685360687d7332742ac016b39af8a7
+          path: test-project
+
+      - name: Build with Friendly Names Disabled
+        uses: ./
+        with:
+          rust-project-path: test-project/tools/cli
+          crate-name: prs-rs-cli
+          target: x86_64-unknown-linux-gnu
+          use-friendly-target-names: false
+          upload-artifacts: true
+
+      - name: Verify artifact name uses raw triple
+        shell: bash
+        run: |
+          echo "BINARY_ARTIFACT_NAME=$BINARY_ARTIFACT_NAME"
+          if [[ "$BINARY_ARTIFACT_NAME" != *"x86_64-unknown-linux-gnu"* ]]; then
+            echo "::error::Expected artifact name to contain raw triple 'x86_64-unknown-linux-gnu' but got '$BINARY_ARTIFACT_NAME'"
+            exit 1
+          fi
+          echo "Artifact name correctly uses raw triple: $BINARY_ARTIFACT_NAME"
