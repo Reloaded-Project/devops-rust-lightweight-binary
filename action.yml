@@ -150,11 +150,12 @@ runs:
         fi
         echo "WORKSPACE_PATH=${WORKSPACE_PATH}" >> $GITHUB_ENV
 
-    - name: Setup artifact directory
+    - name: Sanitize cache key variables
       shell: bash
       run: |
-        # Create a unique output directory based on crate, target and features
-        # Sanitize features string to be filesystem safe
+        # Sanitize features string to be filesystem/cache-key safe
+        # - tr -dc '[:alnum:],_-': delete all chars except alphanumeric, comma, underscore, hyphen
+        # - tr ',' '-': replace commas with hyphens
         SAFE_FEATURES=$(echo "${{ inputs.features }}" | tr -dc '[:alnum:],_-' | tr ',' '-')
         if [ -z "$SAFE_FEATURES" ]; then
           SAFE_FEATURES="no-features"
@@ -172,6 +173,13 @@ runs:
           SAFE_ADDITIONAL_RUSTC_ARGS="no-rustc-args"
         fi
 
+        echo "SAFE_FEATURES=${SAFE_FEATURES}" >> $GITHUB_ENV
+        echo "SAFE_ADDITIONAL_STD_FEATURES=${SAFE_ADDITIONAL_STD_FEATURES}" >> $GITHUB_ENV
+        echo "SAFE_ADDITIONAL_RUSTC_ARGS=${SAFE_ADDITIONAL_RUSTC_ARGS}" >> $GITHUB_ENV
+
+    - name: Setup artifact directory
+      shell: bash
+      run: |
         # Sanitize workspace path - convert '.' to empty string
         WORKSPACE_PATH=$(echo "${{ env.WORKSPACE_PATH }}" | sed 's/^\.$//') 
 
@@ -184,12 +192,9 @@ runs:
 
         # Note: This directory has been crafted to be unique, and within 'target' for caching.
         # Unique such that different project builds within the same workspace generate valid artifacts
-        ARTIFACT_OUT_DIR="${BASE_PATH}artifact-out/${{ inputs.crate-name }}/${{ inputs.target }}/${SAFE_FEATURES}"
+        ARTIFACT_OUT_DIR="${BASE_PATH}artifact-out/${{ inputs.crate-name }}/${{ inputs.target }}/${{ env.SAFE_FEATURES }}"
         mkdir -p "$ARTIFACT_OUT_DIR"
         echo "ARTIFACT_OUT_DIR=${ARTIFACT_OUT_DIR}" >> $GITHUB_ENV
-        echo "SAFE_FEATURES=${SAFE_FEATURES}" >> $GITHUB_ENV
-        echo "SAFE_ADDITIONAL_STD_FEATURES=${SAFE_ADDITIONAL_STD_FEATURES}" >> $GITHUB_ENV
-        echo "SAFE_ADDITIONAL_RUSTC_ARGS=${SAFE_ADDITIONAL_RUSTC_ARGS}" >> $GITHUB_ENV
 
     - name: Setup Rust Caching
       if: inputs.use-cache == 'true'
