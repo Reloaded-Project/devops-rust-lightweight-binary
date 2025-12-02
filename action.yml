@@ -160,13 +160,13 @@ runs:
           SAFE_FEATURES="no-features"
         fi
 
-        # Sanitize additional-std-features string to be filesystem safe
+        # Sanitize additional-std-features string for GitHub Actions cache key
         SAFE_ADDITIONAL_STD_FEATURES=$(echo "${{ inputs.additional-std-features }}" | tr -dc '[:alnum:],_-' | tr ',' '-')
         if [ -z "$SAFE_ADDITIONAL_STD_FEATURES" ]; then
           SAFE_ADDITIONAL_STD_FEATURES="no-std-features"
         fi
 
-        # Sanitize additional-rustc-args string to be filesystem safe
+        # Sanitize additional-rustc-args string for GitHub Actions cache key
         SAFE_ADDITIONAL_RUSTC_ARGS=$(echo "${{ inputs.additional-rustc-args }}" | tr -dc '[:alnum:],_-' | tr ',' '-')
         if [ -z "$SAFE_ADDITIONAL_RUSTC_ARGS" ]; then
           SAFE_ADDITIONAL_RUSTC_ARGS="no-rustc-args"
