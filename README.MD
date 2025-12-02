@@ -31,7 +31,7 @@ It can be used to build both binaries and C libraries.
 As a single job/step of a workflow:
 
 ```yaml
-test-binary-build:
+build:
   strategy:
     matrix:
       include:
@@ -39,67 +39,33 @@ test-binary-build:
           target: x86_64-unknown-linux-gnu
           use-pgo: true
           use-cross: false
-          use-tarpaulin: true
-        - os: ubuntu-latest
-          target: i686-unknown-linux-gnu
-          use-pgo: true
-          use-cross: false
-          use-tarpaulin: true
-        - os: ubuntu-latest
-          target: aarch64-unknown-linux-gnu
-          use-pgo: false # no native runner
-          use-cross: true
-          use-tarpaulin: true
-        - os: ubuntu-latest
-          target: armv7-unknown-linux-gnueabihf
-          use-pgo: false # no native runner
-          use-cross: true
-          use-tarpaulin: true
         - os: windows-latest
           target: x86_64-pc-windows-msvc
           use-pgo: true
           use-cross: false
-          use-tarpaulin: true
-        - os: windows-latest
-          target: i686-pc-windows-msvc
-          use-pgo: true
-          use-cross: false
-          use-tarpaulin: true
-        # no native github actions runner or cross-rs image
-        #- os: windows-latest
-        #  target: aarch64-pc-windows-msvc
-        #  use-pgo: false # no native runner
-        #  use-cross: false
-        #  use-tarpaulin: true
-        - os: macos-15-intel # x86
-          target: x86_64-apple-darwin
-          use-pgo: true
-          use-cross: false
-          use-tarpaulin: true
-        - os: macos-latest # M1
+        - os: macos-latest
           target: aarch64-apple-darwin
           use-pgo: true
           use-cross: false
-          use-tarpaulin: true
+        - os: ubuntu-latest
+          target: aarch64-unknown-linux-gnu
+          use-pgo: false # no native runner
+          use-cross: true
   runs-on: ${{ matrix.os }}
   steps:
-    - name: Checkout Test Repository
+    - name: Checkout Repository
       uses: actions/checkout@v4
-      with:
-        repository: Sewer56/prs-rs
-        ref: d08599ed5473616f57d57a0966939e1a5dbda9b4
-    - name: Test Binary Build
+    - name: Build Binary
       uses: Reloaded-Project/devops-rust-lightweight-binary@v1
       with:
         target: ${{ matrix.target }}
+        crate-name: "my-crate"
         use-pgo: ${{ matrix.use-pgo }}
         use-cross: ${{ matrix.use-cross }}
-        use-tarpaulin: ${{ matrix.use-tarpaulin }}
-        rust-project-path: "tools/cli/"
-        crate-name: "prs-rs-cli"
-        upload-artifacts: false
-        run-tests-and-coverage: true
 ```
+
+> [!TIP]
+> Adjust `rust-project-path` and `workspace-path` (if using cargo workspaces) if your project is not in the root folder `.`.
 
 ## Setup
 
