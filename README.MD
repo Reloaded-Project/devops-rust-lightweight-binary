@@ -108,11 +108,12 @@ To use this action in your own repository:
 
 #### Artifact & Output Settings
 
-| Input                       | Required | Default | Description                                                                                                          |
-| --------------------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
-| `upload-artifacts`          | No       | `true`  | Upload the built artifacts as a GitHub Actions artifact                                                              |
-| `upload-symbols-separately` | No       | `true`  | Upload debug symbol files (.pdb, .dwp, .dSYM) as separate artifacts instead of bundling with main artifacts          |
-| `use-friendly-target-names` | No       | `true`  | Transform target triples to user-friendly names (e.g., `x86_64-unknown-linux-gnu` -> `linux-x64`) in artifact names. |
+| Input                            | Required | Default     | Description                                                                                                                                                       |
+| -------------------------------- | -------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `upload-artifacts`               | No       | `true`      | Upload the built artifacts as a GitHub Actions artifact                                                                                                           |
+| `upload-symbols-separately`      | No       | `true`      | Upload debug symbol files (.pdb, .dwp, .dSYM) as separate artifacts instead of bundling with main artifacts                                                       |
+| `use-friendly-target-names`      | No       | `true`      | Transform target triples to user-friendly names (e.g., `x86_64-unknown-linux-gnu` -> `linux-x64`) in artifact names.                                              |
+| `artifact-name-exclude-features` | No       | `c-exports` | Comma-separated list of features to exclude from artifact names. Features are still built but not included in artifact names. Set to empty string to include all. |
 
 #### Advanced / Low-Level
 
@@ -295,6 +296,21 @@ Artifact names follow the pattern: `{artifact-prefix}-{target}[-features]` or `{
 When `use-friendly-target-names` is enabled (default), the target triple is replaced with a
 user-friendly platform identifier (e.g., `x86_64-unknown-linux-gnu` becomes `linux-x64`,
 `aarch64-apple-darwin` becomes `macos-arm64`). Unmapped targets fall back to the raw target triple.
+
+#### Excluding Features from Artifact Names
+
+Use `artifact-name-exclude-features` to exclude specific features from artifact names while still building them.
+This is useful when features are already distinguished by `artifact-prefix` (e.g., C library builds).
+
+| Features         | Exclude List | Resulting Suffix |
+| ---------------- | ------------ | ---------------- |
+| `c-exports`      | `c-exports`  | (none)           |
+| `c-exports,simd` | `c-exports`  | `-simd`          |
+| `foo,bar`        | `foo,bar`    | (none)           |
+| `bar,foo`        | `foo,bar`    | (none)           |
+
+The default exclusion is `c-exports`, which is commonly redundant for C library builds in Reloaded projects;
+where often the prefix is something like `c-library`. To include all features in names, set to an empty string `""`.
 
 When `upload-symbols-separately` is enabled (default), debug symbols are uploaded as separate artifacts
 with a `.symbols` suffix:
