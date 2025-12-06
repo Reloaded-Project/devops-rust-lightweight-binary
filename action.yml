@@ -182,6 +182,7 @@ runs:
         matcher: false
         cache: false
         toolchain: ${{ inputs.rust-toolchain }}
+        components: "clippy,rustfmt"
 
     - name: Determine workspace path
       shell: bash
