@@ -117,8 +117,8 @@ filter_features() {
     fi
   done
 
-  # Join result with commas
-  local IFS=','
+  # Join result with plus signs (commas invalid in cache keys)
+  local IFS='+'
   echo "${result[*]}"
 }
 
