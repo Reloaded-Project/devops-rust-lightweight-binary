@@ -111,7 +111,7 @@ inputs:
   artifact-name-exclude-features:
     description: "Comma-separated list of features to exclude from artifact names. Set to empty string to include all."
     required: false
-    default: "c-exports"
+    default: "c-exports,bench,nightly"
 
   # ============================================================================
   # Advanced / Low-Level

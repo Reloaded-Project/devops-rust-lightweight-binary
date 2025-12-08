@@ -108,12 +108,12 @@ To use this action in your own repository:
 
 #### Artifact & Output Settings
 
-| Input                            | Required | Default     | Description                                                                                                                                                       |
-| -------------------------------- | -------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `upload-artifacts`               | No       | `true`      | Upload the built artifacts as a GitHub Actions artifact                                                                                                           |
-| `upload-symbols-separately`      | No       | `true`      | Upload debug symbol files (.pdb, .dwp, .dSYM) as separate artifacts instead of bundling with main artifacts                                                       |
-| `use-friendly-target-names`      | No       | `true`      | Transform target triples to user-friendly names (e.g., `x86_64-unknown-linux-gnu` -> `linux-x64`) in artifact names.                                              |
-| `artifact-name-exclude-features` | No       | `c-exports` | Comma-separated list of features to exclude from artifact names. Features are still built but not included in artifact names. Set to empty string to include all. |
+| Input                            | Required | Default                   | Description                                                                                                                                                       |
+| -------------------------------- | -------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `upload-artifacts`               | No       | `true`                    | Upload the built artifacts as a GitHub Actions artifact                                                                                                           |
+| `upload-symbols-separately`      | No       | `true`                    | Upload debug symbol files (.pdb, .dwp, .dSYM) as separate artifacts instead of bundling with main artifacts                                                       |
+| `use-friendly-target-names`      | No       | `true`                    | Transform target triples to user-friendly names (e.g., `x86_64-unknown-linux-gnu` -> `linux-x64`) in artifact names.                                              |
+| `artifact-name-exclude-features` | No       | `c-exports,bench,nightly` | Comma-separated list of features to exclude from artifact names. Features are still built but not included in artifact names. Set to empty string to include all. |
 
 #### Advanced / Low-Level
 
