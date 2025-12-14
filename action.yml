@@ -237,6 +237,10 @@ runs:
         # Unique such that different project builds within the same workspace generate valid artifacts
         CRATE_NAME_FOR_DIR="${{ inputs.crate-name }}"
         if [ -z "$CRATE_NAME_FOR_DIR" ]; then
+          # Fall back to artifact-prefix to ensure unique directories when action is called multiple times
+          CRATE_NAME_FOR_DIR="${{ inputs.artifact-prefix }}"
+        fi
+        if [ -z "$CRATE_NAME_FOR_DIR" ]; then
           CRATE_NAME_FOR_DIR="default"
         fi
         ARTIFACT_OUT_DIR="${BASE_PATH}artifact-out/${CRATE_NAME_FOR_DIR}/${{ inputs.target }}/${{ env.SAFE_FEATURES }}"
