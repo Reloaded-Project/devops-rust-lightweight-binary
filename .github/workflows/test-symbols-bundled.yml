@@ -44,7 +44,7 @@ jobs:
           upload-symbols-separately: false
 
       - name: Download Main Binary Artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ${{ env.BINARY_ARTIFACT_NAME }}
           path: main-artifact
@@ -99,7 +99,7 @@ jobs:
           }
 
       - name: Try Download Symbols Artifact (should not exist)
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         id: download-symbols
         continue-on-error: true
         with:
@@ -150,7 +150,7 @@ jobs:
           upload-symbols-separately: false
 
       - name: Download Main Library Artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ${{ env.LIBRARY_ARTIFACT_NAME }}
           path: main-artifact
@@ -213,7 +213,7 @@ jobs:
           }
 
       - name: Try Download Symbols Artifact (should not exist)
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         id: download-symbols
         continue-on-error: true
         with:

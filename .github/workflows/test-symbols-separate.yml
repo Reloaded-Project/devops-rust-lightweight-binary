@@ -43,7 +43,7 @@ jobs:
           workspace-path: test-project/src
 
       - name: Download Main Binary Artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ${{ env.BINARY_ARTIFACT_NAME }}
           path: main-artifact
@@ -98,7 +98,7 @@ jobs:
           }
 
       - name: Download Symbols Artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ${{ env.BINARY_ARTIFACT_NAME }}.symbols
           path: symbols-artifact
@@ -183,7 +183,7 @@ jobs:
           build-library: true
 
       - name: Download Main Library Artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ${{ env.LIBRARY_ARTIFACT_NAME }}
           path: main-artifact
@@ -244,7 +244,7 @@ jobs:
           }
 
       - name: Download Symbols Artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ${{ env.LIBRARY_ARTIFACT_NAME }}.symbols
           path: symbols-artifact
