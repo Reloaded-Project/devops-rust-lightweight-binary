@@ -165,6 +165,10 @@ inputs:
     description: "Additional arguments to pass to the cargo tarpaulin command"
     required: false
     default: ""
+  packages:
+    description: "Packages to test (multi-line list). Passed through to devops-rust-test-and-coverage. Selects packages for testing; does not influence the build."
+    required: false
+    default: ""
   codecov-flags:
     description: "Flags to pass to Codecov for organizing coverage reports"
     required: false
@@ -555,3 +559,4 @@ runs:
         codecov-flags: ${{ inputs.codecov-flags }}
         codecov-name: ${{ inputs.codecov-name }}
         additional-tarpaulin-args: ${{ inputs.additional-tarpaulin-args }}
+        packages: ${{ inputs.packages }}

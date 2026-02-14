@@ -138,6 +138,9 @@ These parameters are only used when `run-tests-and-coverage` is enabled and are 
 | `additional-tarpaulin-args`  | No       | `''`                 | Additional arguments passed directly to the cargo tarpaulin command.                                  |
 | `codecov-flags`              | No       | `'unittests'`        | Flags to pass to Codecov for organizing coverage reports.                                             |
 | `codecov-name`               | No       | `'codecov-umbrella'` | Custom defined name for the coverage upload.                                                          |
+| `packages`                   | No       | `''`                 | Multi-line list of package names to test (one per line). If empty, tests all packages in workspace.   |
+
+**Note:** The `packages` parameter is passed through to the test action and does not affect which binary is built.
 
 **Note:** The following parameters are used by both this action AND passed through to the test action: `target`, `features`, `no-default-features`, `use-cross`.
 
