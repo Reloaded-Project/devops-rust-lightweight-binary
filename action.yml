@@ -493,7 +493,7 @@ runs:
 
     - name: Upload binary artifacts
       if: inputs.upload-artifacts == 'true' && inputs.build-library != 'true'
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ env.BINARY_ARTIFACT_NAME }}
         path: |
@@ -507,7 +507,7 @@ runs:
       if:
         inputs.upload-artifacts == 'true' && inputs.build-library != 'true' && inputs.upload-symbols-separately ==
         'true'
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ env.BINARY_SYMBOLS_ARTIFACT_NAME }}
         path: |
@@ -517,7 +517,7 @@ runs:
 
     - name: Upload library artifacts
       if: inputs.upload-artifacts == 'true' && inputs.build-library == 'true'
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ env.LIBRARY_ARTIFACT_NAME }}
         path: |
@@ -530,7 +530,7 @@ runs:
       if:
         inputs.upload-artifacts == 'true' && inputs.build-library == 'true' && inputs.upload-symbols-separately ==
         'true'
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ env.LIBRARY_SYMBOLS_ARTIFACT_NAME }}
         path: |
