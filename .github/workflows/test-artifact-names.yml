@@ -134,7 +134,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Action
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Test binary artifact name (no prefix)
         shell: bash
@@ -205,7 +205,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Action
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Test legacy binary artifact name (crate-name only)
         shell: bash
@@ -276,7 +276,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Action
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Test artifact-prefix overrides crate-name for binary
         shell: bash
@@ -317,7 +317,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Action
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Test partial exclusion keeps non-excluded features
         shell: bash
