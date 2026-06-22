@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Action
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout Test Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: Sewer56/prs-rs
           ref: 149060527e685360687d7332742ac016b39af8a7
@@ -37,10 +37,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Action
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout Test Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: Sewer56/prs-rs
           ref: 149060527e685360687d7332742ac016b39af8a7
@@ -73,10 +73,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Action
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout Test Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: Sewer56/prs-rs
           ref: 149060527e685360687d7332742ac016b39af8a7
@@ -95,10 +95,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Action
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout Test Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: Sewer56/prs-rs
           ref: 149060527e685360687d7332742ac016b39af8a7
@@ -118,10 +118,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Action
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout Test Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: Sewer56/prs-rs
           ref: 149060527e685360687d7332742ac016b39af8a7
@@ -141,10 +141,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Action
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout Test Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: Sewer56/prs-rs
           ref: 149060527e685360687d7332742ac016b39af8a7
@@ -165,10 +165,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Action
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout Test Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: Sewer56/prs-rs
           ref: 149060527e685360687d7332742ac016b39af8a7
@@ -195,10 +195,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Action
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout Test Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: Sewer56/prs-rs
           ref: 149060527e685360687d7332742ac016b39af8a7
@@ -227,10 +227,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Action
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout Test Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: Sewer56/prs-rs
           ref: 149060527e685360687d7332742ac016b39af8a7
@@ -251,10 +251,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Action
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout Test Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: Sewer56/dxt-lossless-transform
           ref: d47afd9a7c2fa71495b6d942853b0fe41f258e26
@@ -273,10 +273,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Action
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout Test Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: Sewer56/dxt-lossless-transform
           ref: d47afd9a7c2fa71495b6d942853b0fe41f258e26
@@ -295,10 +295,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Action
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout Test Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: Sewer56/prs-rs
           ref: 149060527e685360687d7332742ac016b39af8a7
