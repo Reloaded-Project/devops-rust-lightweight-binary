@@ -314,12 +314,10 @@ runs:
       shell: bash
       working-directory: ${{ env.WORKSPACE_PATH }}
       run: |
+        # Build with the selected host toolchain and the requested target.
+        # Not every target publishes a target-native compiler toolchain.
         rustup target add ${{ inputs.target }} --toolchain ${{ inputs.rust-toolchain }}
         rustup component add rust-src --toolchain ${{ inputs.rust-toolchain }}
-        if [ "${{ inputs.use-cross }}" != "true" ]; then
-          # Install native toolchain to build with, otherwise it's provided by cross.
-          rustup toolchain install ${{ inputs.rust-toolchain }}-${{ inputs.target }} --force-non-host
-        fi
 
         # Install cross-rs if needed
         if [ "${{ inputs.use-cross }}" == "true" ]; then

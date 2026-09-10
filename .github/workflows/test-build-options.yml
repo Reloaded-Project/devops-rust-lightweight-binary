@@ -11,6 +11,88 @@ on:
       - ".github/workflows/test-build-options.yml"
 
 jobs:
+  test-target-matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: Linux x64
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            rust-toolchain: nightly
+            use-cross: false
+          - label: Linux x86
+            os: ubuntu-latest
+            target: i686-unknown-linux-gnu
+            rust-toolchain: nightly
+            use-cross: false
+          - label: Linux ARM64
+            os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            rust-toolchain: nightly
+            use-cross: true
+          - label: Linux ARMv7
+            os: ubuntu-latest
+            target: armv7-unknown-linux-gnueabihf
+            rust-toolchain: nightly
+            use-cross: true
+          - label: Windows x64
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            rust-toolchain: nightly
+            use-cross: false
+          - label: Windows x86
+            os: windows-latest
+            target: i686-pc-windows-msvc
+            rust-toolchain: nightly
+            use-cross: false
+          - label: Windows x86 (pinned nightly)
+            os: windows-latest
+            target: i686-pc-windows-msvc
+            rust-toolchain: nightly-2025-09-11
+            use-cross: false
+          - label: macOS Intel
+            os: macos-15-intel
+            target: x86_64-apple-darwin
+            rust-toolchain: nightly
+            use-cross: false
+          - label: macOS ARM64
+            os: macos-latest
+            target: aarch64-apple-darwin
+            rust-toolchain: nightly
+            use-cross: false
+          - label: Big Endian 32-bit
+            os: ubuntu-latest
+            target: powerpc-unknown-linux-gnu
+            rust-toolchain: nightly
+            use-cross: true
+          - label: Big Endian 64-bit
+            os: ubuntu-latest
+            target: powerpc64-unknown-linux-gnu
+            rust-toolchain: nightly
+            use-cross: true
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout Action
+        uses: actions/checkout@v6
+
+      - name: Checkout Test Repository
+        uses: actions/checkout@v6
+        with:
+          repository: Sewer56/prs-rs
+          ref: 149060527e685360687d7332742ac016b39af8a7
+          path: test-project
+
+      - name: Build Target
+        uses: ./
+        with:
+          rust-project-path: test-project/tools/cli
+          rust-toolchain: ${{ matrix.rust-toolchain }}
+          target: ${{ matrix.target }}
+          use-cross: ${{ matrix.use-cross }}
+          upload-artifacts: false
+
   test-build-without-native-host-tools:
     runs-on: ubuntu-latest
     steps:
