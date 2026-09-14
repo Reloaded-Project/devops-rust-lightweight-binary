@@ -181,7 +181,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: actions-rust-lang/setup-rust-toolchain@v1
+    - uses: actions-rust-lang/setup-rust-toolchain@v2
       with:
         matcher: false
         cache: false
